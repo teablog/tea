@@ -1,0 +1,25 @@
+name: Docker Image CI # Actions名称
+
+on: # 执行时机
+  push:
+    tags: v*
+jobs:
+  build: # 一个名叫build的任务（名字可以随便起）
+    runs-on: ubuntu-latest # 基于最新版Ubuntu系统执行下列任务
+    steps:
+      - uses: actions/checkout@v1 # 将仓库内容拷贝到Ubuntu系统的虚拟环境
+      - name: Build the Docker image # 步骤名字
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD_ALI }} | docker login --username=${{ secrets.DOCKER_USER_ALI }} registry.cn-hangzhou.aliyuncs.com --password-stdin
+          docker build -t registry.cn-hangzhou.aliyuncs.com/douyacun/api:latest . # 执行构建
+          docker push registry.cn-hangzhou.aliyuncs.com/douyacun/api:latest
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Docker compose pull image
+        run: sudo docker-compose -f ${{ secrets.root }}/deployments/api/docker-compose.yml pull
+      - name: Docker compose recreate container
+        run: sudo docker-compose -f ${{ secrets.root }}/deployments/api/docker-compose.yml up --force-recreate -d
+      - name: Docker image prune
+        run: echo y|sudo docker image prune -a

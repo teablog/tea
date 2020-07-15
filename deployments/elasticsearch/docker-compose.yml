@@ -1,0 +1,41 @@
+version: "3.3"
+
+networks:
+  es-net:
+    driver: bridge
+
+services:
+
+  elasticsearch:
+    image: registry.cn-hangzhou.aliyuncs.com/douyacun/elasticsearch:latest
+    container_name: elasticsearch
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://elasticsearch:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    networks:
+      - es-net
+    volumes:
+      - /data/elasticsearch/data:/usr/share/elasticsearch/data
+      - /data/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+  kibana:
+    image: docker.io/kibana:7.5.0
+    container_name: kibana
+    networks:
+      - es-net
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    volumes:
+      - /data/elasticsearch/kibana.yml:/usr/share/kibana/config/kibana.yml

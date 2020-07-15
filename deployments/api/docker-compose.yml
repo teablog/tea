@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+
+  douyacun-api:
+    image: registry.cn-hangzhou.aliyuncs.com/douyacun/api:latest
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9003/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      _DOUYACUN_CONF: /data/web/api.douyacun.com/configs/prod.ini
+    ports:
+      - "9003:9003"
+    volumes:
+      - /data:/data
