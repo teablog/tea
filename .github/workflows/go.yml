@@ -1,9 +1,8 @@
 name: Docker Image CI # Actions名称
 
-on:
+on: # 执行时机
   push:
     branches: [ master ]
-
 jobs:
   build: # 一个名叫build的任务（名字可以随便起）
     runs-on: ubuntu-latest # 基于最新版Ubuntu系统执行下列任务
