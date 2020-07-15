@@ -1,4 +1,4 @@
-name: Docker Image CI # Actions名称
+name: go
 
 on: # 执行时机
   push:
