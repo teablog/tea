@@ -11,15 +11,15 @@ jobs:
       - name: Build the Docker image # 步骤名字
         run: |
           echo ${{ secrets.DOCKER_PASSWORD_ALI }} | docker login --username=${{ secrets.DOCKER_USER_ALI }} registry.cn-hangzhou.aliyuncs.com --password-stdin
-          docker build -t registry.cn-hangzhou.aliyuncs.com/douyacun/api:latest . # 执行构建
-          docker push registry.cn-hangzhou.aliyuncs.com/douyacun/api:latest
+          docker build -t registry.cn-hangzhou.aliyuncs.com/douyacun/tea:latest . # 执行构建
+          docker push registry.cn-hangzhou.aliyuncs.com/douyacun/tea:latest
   deploy:
     runs-on: self-hosted
     needs: build
     steps:
       - name: Docker compose pull image
-        run: sudo docker-compose -f ${{ secrets.root }}/deployments/api/docker-compose.yml pull
+        run: sudo docker-compose -f ${{ secrets.root }}/tea/deployments/tea/docker-compose.yml pull
       - name: Docker compose recreate container
-        run: sudo docker-compose -f ${{ secrets.root }}/deployments/api/docker-compose.yml up --force-recreate -d
+        run: sudo docker-compose -f ${{ secrets.root }}/tea/deployments/tea/docker-compose.yml up --force-recreate -d
       - name: Docker image prune
         run: echo y|sudo docker image prune -a

@@ -16,7 +16,7 @@ var Start = cli.Command{
 			Usage:    "-conf <path>",
 			EnvVar:   "_DOUYACUN_CONF",
 			Required: false,
-			Value:    "/data/web/api.douyacun.com/configs/prod.ini",
+			Value:    "/data/web/tea.douyacun.com/configs/prod.ini",
 		},
 	},
 }
