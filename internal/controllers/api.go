@@ -18,7 +18,7 @@ func NewRouter(router *gin.Engine) {
 	hub := chat.NewHub()
 	go hub.Run()
 	storageDir := config.GetKey("path::storage_dir").String()
-	api := router.Group("/tea")
+	api := router.Group("/api")
 	{
 		// 文章
 		api.GET("/articles", Article.List)
