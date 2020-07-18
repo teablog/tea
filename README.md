@@ -84,10 +84,9 @@ if helper.Image.WebPSupportExt(ext) {
    - [x] 首页文章分页, 文章按更新时间排序
 - [ ] es响应结构体重构
 - [ ] 接入kong
-    - [ ] 增加前端consumer key-auth插件
-    - [ ] 增加限流
-        - [ ] 匿名用户限流
-        - [ ] 已登陆用户限流
+    - [x] ui 接入
+    - [x] api 接入
+    - [x] [增加限流](#限流)
 - [ ] 报表
     - [ ] 地理坐标获取
     - [x] 增加友盟
@@ -108,3 +107,46 @@ if helper.Image.WebPSupportExt(ext) {
     - [ ] 天气react组件开发-腾讯天气
     - [ ] 博客组件开发
 - [ ] SEO优化
+
+# kong
+
+## 限流
+
+对匿名用户限流
+1. 创建service
+
+  ![](./assert/kong-anonymous-serveice-create.png)
+
+2. 创建route
+
+  ![](./assert/kong-anonymous-route-create.png)
+
+3. 创建anonymous Consumer
+
+  ![](./assert/kong-anonmouys-consumer-create.png)
+
+  > 创建完成后，可以在列表中查看详情,
+  >
+  > ```json
+  > {
+  >   "custom_id": null,
+  >   "created_at": 1594655229,
+  >   "id": "762663d6-f465-4549-a4f8-ac4ae51f7f0e",
+  >   "tags": [],
+  >   "username": "anonymous"
+  > }
+  > ```
+
+4. 创建key-auth plugin
+
+  ![](./assert/kong-anonymous-key-auth-create.png)
+
+5. 允许anonymous Consumer访问
+
+   1. 第三步生成的consumer的id填写到 key-auth plugin的anonymous中
+
+6. 验证 
+
+    ![](./assert/kong-anonymous-response-header.png)
+
+
