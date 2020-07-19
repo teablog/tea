@@ -2,6 +2,54 @@ github master push 自动触发部署到博客
 
 [![Build Status](https://travis-ci.org/douyacun/api.douyacun.com.svg?branch=master)](https://travis-ci.org/douyacun/api.douyacun.com)
 
+
+# todo
+- [ ] open api
+    - [ ] 天气
+    - [ ] GEO IP
+        - [ ] ip数据库存储问题
+        - [ ] 增加ip2location
+        - [ ] 增加纯真ip
+- [ ] 报表
+    - [ ] 地理坐标获取
+    - [x] 增加友盟
+    - [ ] UA
+        - [ ] 浏览器
+        - [ ] 分辨率
+        - [ ] 语言
+        - [ ] 操作系统
+    - [ ] source
+- [ ] 组件
+    - [ ] UI组件部署
+    - [ ] 后端组件部署
+        - [ ] 配置读取环境变量
+    - [ ] 天气react组件开发-腾讯天气
+    - [ ] 聊天组件
+        - [ ] 搜索聊天内容上下文
+- [ ] SEO优化
+- [x] 自动部署
+    - [x] travis ci 自动部署
+    - [x] 部署文章时, 开启debug模式
+- [ ] 文章数据分析
+    - [x] 文章封面
+        - [ ] 封面功能，配置没有文件，取文档第一张图片作为封面
+    - [x] 图片提取
+    - [x] 文章关键词提取
+    - [x] git提取文件创建时间，见helper.Git.LogFileLastCommitTime()
+    - [x] 图片转webp格式，实现图片压缩功能
+    - [ ] 没有描述的话，取文章前25个字作为描述，过滤掉`[TOC]`
+    - [x] markdown 本地跳转, 1-go-cannel.md
+- [x] 页面样式
+   - [x] 适配手机端
+   - [x] 制作favicon.ico
+   - [x] 前端js文件404问题(nextjs link 默认会是预加载页面： <Link> will automatically prefetch pages in the background )
+   - [x] 首页文章分页, 文章按更新时间排序
+- [x] 接入kong
+    - [x] ui 接入
+    - [x] api 接入
+    - [x] [增加限流](#限流)
+
+
 # 全局配置
 **douyacun.yml 全局配置**
 ```yaml
@@ -62,51 +110,6 @@ if helper.Image.WebPSupportExt(ext) {
     }
 }
 ```
-
-# todo
-
-- [x] 自动部署
-    - [x] travis ci 自动部署
-    - [x] 部署文章时, 开启debug模式
-- [ ] 文章数据分析
-    - [x] 文章封面
-        - [ ] 封面功能，配置没有文件，取文档第一张图片作为封面
-    - [x] 图片提取
-    - [x] 文章关键词提取
-    - [x] git提取文件创建时间，见helper.Git.LogFileLastCommitTime()
-    - [x] 图片转webp格式，实现图片压缩功能
-    - [ ] 没有描述的话，取文章前25个字作为描述，过滤掉`[TOC]`
-    - [x] markdown 本地跳转, 1-go-cannel.md
-- [ ] 页面样式
-   - [x] 适配手机端
-   - [x] 制作favicon.ico
-   - [x] 前端js文件404问题(nextjs link 默认会是预加载页面： <Link> will automatically prefetch pages in the background )
-   - [x] 首页文章分页, 文章按更新时间排序
-- [ ] es响应结构体重构
-- [ ] 接入kong
-    - [x] ui 接入
-    - [x] api 接入
-    - [x] [增加限流](#限流)
-- [ ] 报表
-    - [ ] 地理坐标获取
-    - [x] 增加友盟
-    - [ ] ip 解析ip地址到城市
-        - [x] GEO ip
-        - [x] ipip
-        - [x] 高德地图API
-    - [ ] UA
-        - [ ] 浏览器
-        - [ ] 分辨率
-        - [ ] 语言
-        - [ ] 操作系统
-    - [ ] source
-- [ ] 公开API
-    - [ ] 天气api
-    - [ ] ip所属城市api
-- [ ] 组件
-    - [ ] 天气react组件开发-腾讯天气
-    - [ ] 博客组件开发
-- [ ] SEO优化
 
 # kong
 
