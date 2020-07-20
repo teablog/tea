@@ -28,7 +28,8 @@ func (*_util) Weather(ctx *gin.Context) {
 }
 
 func (*_util) Ip(ctx *gin.Context) {
-	ip := ctx.ClientIP()
+	//ip := ctx.ClientIP()
+	ip, _ := ctx.GetQuery("ip")
 	res, err := util.LocationByIp(ip)
 	if err != nil {
 		helper.Fail(ctx, err)
