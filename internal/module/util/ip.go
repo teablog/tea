@@ -3,12 +3,10 @@ package util
 import (
 	"dyc/internal/config"
 	"dyc/internal/module/util/ip2location"
-	"dyc/internal/module/util/qqwry"
 	"fmt"
 	"github.com/ipipdotnet/ipdb-go"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/pkg/errors"
-	"net"
 	"os"
 )
 
@@ -24,18 +22,12 @@ const (
 
 	ReferIp2location = "ip2location"
 	ReferIpIp        = "ipip"
-	ReferQQwry       = "qqwry"
-	ReferGeoIp       = "geoip"
 )
 
 func Init() {
 	ipipdb, _ = ipdb.NewCity(config.GetKey("ip::ipip_file").String())
-	geoipdb, _ = geoip2.Open(config.GetKey("ip::geo_file").String())
-	qqwrydb, _ = qqwry.Getqqdata(config.GetKey("ip::qqwry_file").String())
 	ip2locationdb, _ = ip2location.OpenDB(config.GetKey("ip::ip2location_file").String())
 }
-
-type parseIpFunc func(ip string) (map[string]string, error)
 
 func ipip2(ip string) (map[string]string, error) {
 	info, err := ipipdb.FindMap(ip, "CN")
@@ -46,31 +38,6 @@ func ipip2(ip string) (map[string]string, error) {
 	row["city"] = info["city_name"]
 	row["country"] = info["country_name"]
 	row["refer"] = ReferIpIp
-	return row, nil
-}
-
-func geoip(ip string) (map[string]string, error) {
-	record, err := geoipdb.City(net.ParseIP(ip))
-	if err != nil {
-		return nil, err
-	}
-	_ = record.City.Names
-	row := make(map[string]string)
-	row["city"] = record.City.Names[Language]
-	row["continent"] = record.Continent.Names[Language]
-	row["country"] = record.Country.Names[Language]
-	row["latitude"] = fmt.Sprintf("%f", record.Location.Latitude)
-	row["longitude"] = fmt.Sprintf("%f", record.Location.Latitude)
-	row["refer"] = ReferGeoIp
-	return row, nil
-}
-
-func qqwry2(ip string) (map[string]string, error) {
-	var (
-		row = make(map[string]string)
-	)
-	row["country"], row["city"] = qqwry.Getlocation(qqwrydb, ip)
-	row["refer"] = ReferQQwry
 	return row, nil
 }
 
@@ -85,14 +52,6 @@ func ip2location2(ip string) (map[string]string, error) {
 	row["city"] = res.City
 	row["refer"] = ReferIp2location
 	return row, nil
-}
-
-func workflow(call parseIpFunc, ch chan map[string]string, ip string) {
-	res, err := call(ip)
-	if err != nil {
-		return
-	}
-	ch <- res
 }
 
 func LocationByIp(ip string) (map[string]string, error) {

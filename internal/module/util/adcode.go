@@ -64,6 +64,31 @@ func (*AdCode) FindByName(ctx *gin.Context, name string) (*[]AdCode, error) {
 	return &list, nil
 }
 
+func (*AdCode) FindByNamePingyin(ctx *gin.Context, pingyin string) (*[]AdCode, error) {
+	body := fmt.Sprintf(`{
+  "query": {
+    "prefix": {
+      "name.pinyin": "%s"
+    }
+  }
+}`, strings.ToLower(pingyin))
+	res, err := db.ES.Search(
+		db.ES.Search.WithIndex(consts.IndicesAdCodeConst),
+		db.ES.Search.WithBody(strings.NewReader(body)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	bodyRaw, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, errors.New("response body read failed")
+	}
+	if res.IsError() {
+		return nil, errors.New(string(bodyRaw))
+	}
+}
+
 func (a *AdCode) FindCity(ctx *gin.Context, name string) (*AdCode, error) {
 	if regions, err := a.FindByName(ctx, name); err != nil {
 		return nil, err
