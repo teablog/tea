@@ -87,6 +87,7 @@ func (*AdCode) FindByNamePingyin(ctx *gin.Context, pingyin string) (*[]AdCode, e
 	if res.IsError() {
 		return nil, errors.New(string(bodyRaw))
 	}
+	return nil, nil
 }
 
 func (a *AdCode) FindCity(ctx *gin.Context, name string) (*AdCode, error) {
