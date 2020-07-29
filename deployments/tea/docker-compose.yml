@@ -11,7 +11,7 @@ services:
       timeout: 5s
       retries: 5
     environment:
-      _DOUYACUN_CONF: /data/web/tea/configs/prod.ini
+      _TEA_CONF: /data/web/tea/configs/prod.ini
     ports:
       - "9003:9003"
     volumes:

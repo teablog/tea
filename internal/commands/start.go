@@ -16,7 +16,6 @@ var Start = cli.Command{
 			Usage:    "-conf <path>",
 			EnvVar:   "_TEA_CONF",
 			Required: false,
-			Value:    "/data/web/tea.douyacun.com/configs/prod.ini",
 		},
 	},
 }
