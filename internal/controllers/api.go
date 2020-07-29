@@ -35,8 +35,8 @@ func NewRouter(router *gin.Engine) {
 		{
 			// ip 地址解析
 			tool.GET("/location/ip", Tools.Ip)
-			tool.GET("/location", Tools.Location)
 			tool.GET("/location/latitude-longitude", Tools.Amap)
+			tool.GET("/location", Tools.Location)
 		}
 		// websocket
 		auth := api.Group("/", middleware.LoginCheck())

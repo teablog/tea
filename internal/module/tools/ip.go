@@ -59,6 +59,9 @@ func ip2location2(ip string) (*Region, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "ip2location get all error")
 	}
+	if res.City == "-" || res.Country_long == "-" {
+		return nil, CityNotFound
+	}
 	return &Region{
 		Country:  res.Country_long,
 		Province: res.Region,
