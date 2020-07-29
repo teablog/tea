@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"dyc/internal/config"
-	"dyc/internal/initialize"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/initialize"
 	"github.com/urfave/cli"
 )
 

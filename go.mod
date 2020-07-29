@@ -1,4 +1,4 @@
-module dyc
+module github.com/teablog/tea
 
 go 1.12
 

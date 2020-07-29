@@ -2,8 +2,8 @@ package account
 
 import (
 	"bytes"
-	"dyc/internal/config"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/logger"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"

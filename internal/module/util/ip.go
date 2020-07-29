@@ -1,7 +1,7 @@
 package util
 
 import (
-	"dyc/internal/config"
+	"github.com/teablog/tea/internal/config"
 	"fmt"
 	"github.com/ipipdotnet/ipdb-go"
 	"github.com/oschwald/geoip2-golang"

@@ -1,7 +1,7 @@
 package subscribe
 
 import (
-	"dyc/internal/db"
+	"github.com/teablog/tea/internal/db"
 	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"

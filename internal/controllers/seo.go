@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"dyc/internal/helper"
-	"dyc/internal/module/seo"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/module/seo"
 	"github.com/gin-gonic/gin"
 )
 

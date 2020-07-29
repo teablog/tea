@@ -1,9 +1,9 @@
 package deploy
 
 import (
-	"dyc/internal/config"
-	"dyc/internal/helper"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
 	"errors"
 	"fmt"
 	"gopkg.in/yaml.v2"

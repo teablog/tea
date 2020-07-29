@@ -1,7 +1,7 @@
 package db
 
 import (
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/logger"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"sync"

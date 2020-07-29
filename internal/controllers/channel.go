@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"dyc/internal/consts"
-	"dyc/internal/helper"
-	"dyc/internal/logger"
-	"dyc/internal/module/account"
-	"dyc/internal/module/chat"
-	"dyc/internal/validate"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/account"
+	"github.com/teablog/tea/internal/module/chat"
+	"github.com/teablog/tea/internal/validate"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"time"

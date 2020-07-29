@@ -2,11 +2,11 @@ package chat
 
 import (
 	"bytes"
-	"dyc/internal/consts"
-	"dyc/internal/db"
-	"dyc/internal/derror"
-	"dyc/internal/module/account"
-	"dyc/internal/validate"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/derror"
+	"github.com/teablog/tea/internal/module/account"
+	"github.com/teablog/tea/internal/validate"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"

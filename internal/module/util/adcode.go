@@ -1,8 +1,8 @@
 package util
 
 import (
-	"dyc/internal/consts"
-	"dyc/internal/db"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"

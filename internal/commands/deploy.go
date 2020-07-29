@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"dyc/internal/config"
-	"dyc/internal/db"
-	"dyc/internal/logger"
-	"dyc/internal/module/deploy"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/deploy"
 	"github.com/urfave/cli"
 )
 

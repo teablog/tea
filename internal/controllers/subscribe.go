@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"dyc/internal/helper"
-	"dyc/internal/logger"
-	"dyc/internal/module/subscribe"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/subscribe"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"regexp"

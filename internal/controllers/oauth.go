@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"dyc/internal/helper"
-	"dyc/internal/module/account"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/module/account"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"net/http"

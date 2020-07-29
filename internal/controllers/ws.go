@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"dyc/internal/module/chat"
+	"github.com/teablog/tea/internal/module/chat"
 	"github.com/gin-gonic/gin"
 )
 

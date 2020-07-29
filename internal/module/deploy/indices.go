@@ -1,9 +1,9 @@
 package deploy
 
 import (
-	"dyc/internal/consts"
-	"dyc/internal/db"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/logger"
 	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"

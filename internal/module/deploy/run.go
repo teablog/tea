@@ -1,10 +1,10 @@
 package deploy
 
 import (
-	"dyc/internal/config"
-	"dyc/internal/consts"
-	"dyc/internal/helper"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
 	"path"
 	"strings"
 	"sync"

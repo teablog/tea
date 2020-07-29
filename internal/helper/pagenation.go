@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"dyc/internal/consts"
+	"github.com/teablog/tea/internal/consts"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )

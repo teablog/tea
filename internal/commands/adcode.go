@@ -2,15 +2,15 @@ package commands
 
 import (
 	"bytes"
-	"dyc/internal/config"
-	"dyc/internal/consts"
-	"dyc/internal/db"
-	"dyc/internal/logger"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/logger"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"os"
@@ -35,6 +35,7 @@ var AdCode = cli.Command{
 	},
 	Action: adcode,
 }
+
 // 城市code：https://lbs.amap.com/api/webservice/download
 func adcode(c *cli.Context) error {
 	config.Init(c.String("env"))
@@ -129,7 +130,7 @@ func store(records [][]string) error {
 		return err
 	}
 	type _esResponse struct {
-		Took int `json:"took"`
+		Took   int  `json:"took"`
 		Errors bool `json:"errors"`
 	}
 	var esResponse _esResponse

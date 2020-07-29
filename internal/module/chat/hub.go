@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"dyc/internal/consts"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/logger"
 )
 
 type Responser interface {

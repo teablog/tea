@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"dyc/internal/config"
-	"dyc/internal/middleware"
-	"dyc/internal/module/chat"
-	"dyc/internal/module/util"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/middleware"
+	"github.com/teablog/tea/internal/module/chat"
+	"github.com/teablog/tea/internal/module/util"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path"

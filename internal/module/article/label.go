@@ -2,8 +2,8 @@ package article
 
 import (
 	"bytes"
-	"dyc/internal/consts"
-	"dyc/internal/db"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
 	"encoding/json"
 	"github.com/pkg/errors"
 )

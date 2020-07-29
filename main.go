@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dyc/internal/commands"
+	"github.com/teablog/tea/internal/commands"
 	"github.com/urfave/cli"
 	"log"
 	"os"
@@ -9,12 +9,13 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "douyacun"
+	app.Name = "tea"
 	app.Version = "v0.3.10"
 	app.Commands = []cli.Command{
 		commands.Start,
 		commands.Deploy,
 		commands.AdCode,
+		commands.GlobalRegion,
 	}
 	err := app.Run(os.Args)
 	if err != nil {

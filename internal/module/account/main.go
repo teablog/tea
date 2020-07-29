@@ -2,11 +2,11 @@ package account
 
 import (
 	"bytes"
-	"dyc/internal/config"
-	"dyc/internal/consts"
-	"dyc/internal/db"
-	"dyc/internal/helper"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"

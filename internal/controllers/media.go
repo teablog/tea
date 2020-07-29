@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"dyc/internal/helper"
-	"dyc/internal/module/media"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/module/media"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )

@@ -1,8 +1,8 @@
 package seo
 
 import (
-	"dyc/internal/config"
-	"dyc/internal/module/article"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/module/article"
 	"errors"
 	"fmt"
 	"github.com/douyacun/gositemap"

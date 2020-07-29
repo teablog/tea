@@ -2,9 +2,9 @@ package article
 
 import (
 	"bytes"
-	"dyc/internal/consts"
-	"dyc/internal/db"
-	"dyc/internal/helper"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/helper"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"

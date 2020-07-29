@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"dyc/internal/helper"
-	"dyc/internal/logger"
-	"dyc/internal/module/util"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/util"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"

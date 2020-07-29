@@ -2,10 +2,10 @@ package chat
 
 import (
 	"bytes"
-	"dyc/internal/consts"
-	"dyc/internal/db"
-	"dyc/internal/helper"
-	"dyc/internal/logger"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"io/ioutil"

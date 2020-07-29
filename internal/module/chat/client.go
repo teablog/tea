@@ -1,9 +1,9 @@
 package chat
 
 import (
-	"dyc/internal/derror"
-	"dyc/internal/logger"
-	"dyc/internal/module/account"
+	"github.com/teablog/tea/internal/derror"
+	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/account"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"log"
