@@ -75,11 +75,26 @@ func (g *_globalRegion) FindByNameEN(ctx context.Context, nameEN string) ([]*Glo
 	}
 	for _, v := range hits {
 		item := &GlobalRegionComponent{}
-		if err := json.Unmarshal(v.Source, item); err != nil {
+		if err := json.Unmarshal(v.Source, item); err == nil {
 			rows = append(rows, item)
 		}
 	}
 	return rows, nil
+}
+
+func (g *_globalRegion) GetChinaCityByNameEN(ctx context.Context, nameEN string) (*GlobalRegionComponent, error) {
+	rows, err := g.FindByNameEN(ctx, nameEN)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, CityNotFound
+	}
+	city := rows[0]
+	if city.Level != GlobalRegionLevelCity {
+		return nil, CityNotFound
+	}
+	return city, nil
 }
 
 func (g *_globalRegion) GetCityByNameEN(ctx context.Context, nameEN string) (*GlobalRegionComponent, error) {
@@ -91,7 +106,7 @@ func (g *_globalRegion) GetCityByNameEN(ctx context.Context, nameEN string) (*Gl
 		return nil, CityNotFound
 	}
 	city := rows[0]
-	if city.Level != GlobalRegionLevelCity {
+	if city.Level != GlobalRegionLevelProvince {
 		return nil, CityNotFound
 	}
 	return city, nil
@@ -147,7 +162,7 @@ func (g *_globalRegion) Component(ctx context.Context, cityId string) (map[strin
 					Code:   country.Code,
 				},
 				"city": {
-					Name:   city.Name,
+					Name:   city.NameEN,
 					Adcode: "",
 					Code:   city.Code,
 				},

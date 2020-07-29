@@ -14,7 +14,6 @@ require (
 	github.com/jinzhu/gorm v1.9.10
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/pkg/errors v0.8.1
 	github.com/qiniu/iconv v1.2.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect
@@ -22,6 +21,7 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
+	golang.org/x/sys v0.0.0-20191224085550-c709ea063b76 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/ini.v1 v1.52.0
 	gopkg.in/yaml.v2 v2.2.2

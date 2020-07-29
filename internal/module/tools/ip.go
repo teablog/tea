@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/module/tools/ip2location"
-	"strconv"
 )
 
 var (
@@ -72,20 +71,28 @@ func ip2location2(ip string) (*Region, error) {
 func LocationByIp(ctx context.Context, ip string) (map[string]*AdCodeComponent, error) {
 	if res, err := ipip2(ip); err == nil && res.City != "" {
 		if city, err := AdCode.FindCity(ctx, res.City); err == nil {
-			return AdCode.Component(ctx, city.Code)
+			return AdCode.Component(ctx, city.Adcode)
 		}
 	}
 	if res, err := ip2location2(ip); err == nil {
 		if res.Country == ChinaEN {
-			if region, err := GlobalRegion.GetCityByNameEN(ctx, res.City); err == nil {
+			if region, err := GlobalRegion.GetChinaCityByNameEN(ctx, res.City); err == nil {
 				if city, err := AdCode.FindCity(ctx, region.Name); err == nil {
-					return AdCode.Component(ctx, city.Code)
+					return AdCode.Component(ctx, city.Adcode)
 				}
 			}
 		} else {
-			if region, err := GlobalRegion.GetCityByNameEN(ctx, res.City); err == nil {
-				return GlobalRegion.Component(ctx, strconv.Itoa(region.Id))
-			}
+			//if region, err := GlobalRegion.GetCityByNameEN(ctx, res.City); err == nil {
+			//	return GlobalRegion.Component(ctx, strconv.Itoa(region.Id))
+			//}
+			return map[string]*AdCodeComponent{
+				"country": {
+					Name: res.Country,
+				},
+				"city": {
+					Name: res.City,
+				},
+			}, nil
 		}
 	}
 	return nil, LocationError
