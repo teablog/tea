@@ -16,6 +16,7 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/pkg/errors v0.8.1
+	github.com/qiniu/iconv v1.2.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/urfave/cli v1.22.1
 	go.uber.org/atomic v1.4.0 // indirect

@@ -18,7 +18,7 @@ func NewRouter(router *gin.Engine) {
 	hub := chat.NewHub()
 	go hub.Run()
 	storageDir := config.GetKey("path::storage_dir").String()
-	api := router.Group("/tea")
+	api := router.Group("/api")
 	{
 		// 文章
 		api.GET("/articles", Article.List)
@@ -27,10 +27,7 @@ func NewRouter(router *gin.Engine) {
 		api.GET("/topic/:topic", Topic.List)
 		api.GET("/search/articles", Article.Search)
 		api.POST("/subscribe", Subscribe.Create)
-		// 电影资源
-		api.GET("/media/subtype/:subtype", Media.Index)
-		api.GET("/search/media", Media.Search)
-		api.GET("/video/:id", Media.View)
+		// 账户
 		api.GET("/oauth/github", Oauth.Github)
 		api.POST("/oauth/google", Oauth.Google)
 		// 工具

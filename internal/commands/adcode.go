@@ -27,10 +27,11 @@ var AdCode = cli.Command{
 			Required: true,
 		},
 		cli.StringFlag{
-			Name:     "env",
-			Usage:    "--env [env]",
+			Name:     "conf",
+			Usage:    "-conf <path>",
+			EnvVar:   "_DOUYACUN_CONF",
 			Required: false,
-			Value:    "debug",
+			Value:    "/data/web/tea.douyacun.com/configs/prod.ini",
 		},
 	},
 	Action: adcode,
@@ -38,7 +39,7 @@ var AdCode = cli.Command{
 
 // 城市code：https://lbs.amap.com/api/webservice/download
 func adcode(c *cli.Context) error {
-	config.Init(c.String("env"))
+	config.Init(c.String("conf"))
 	db.NewElasticsearch(config.GetKey("elasticsearch::address").Strings(","), config.GetKey("elasticsearch::user").String(), config.GetKey("elasticsearch::password").String())
 	logger.NewLogger(config.GetLogFD())
 	fp, err := os.Open(c.String("csv"))

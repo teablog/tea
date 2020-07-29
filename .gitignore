@@ -2,8 +2,4 @@
 */.DS_Store
 .DS_Store
 bin/
-storage/douyacun.pid
-storage/images
-/configs/douyacun.yml
 douyacun
-/configs/prod.ini

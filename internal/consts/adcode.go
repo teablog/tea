@@ -13,12 +13,9 @@ const (
       "tokenizer": {
         "my_pinyin": {
           "type": "pinyin",
-          "keep_separate_first_letter": false,
           "keep_full_pinyin": true,
-          "keep_original": true,
-          "limit_first_letter_length": 16,
-          "lowercase": true,
-          "remove_duplicated_term": true
+          "keep_joined_full_pinyin": true,
+          "lowercase": true
         }
       }
     }
