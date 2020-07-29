@@ -1,17 +1,17 @@
 package controllers
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/chat"
-	"github.com/teablog/tea/internal/module/util"
-	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/module/tools"
 	"net/http"
 	"path"
 )
 
 func Init(engine *gin.Engine) {
-	util.Init()
+	tools.Init()
 }
 
 func NewRouter(router *gin.Engine) {
@@ -31,19 +31,12 @@ func NewRouter(router *gin.Engine) {
 		api.GET("/oauth/github", Oauth.Github)
 		api.POST("/oauth/google", Oauth.Google)
 		// 工具
-		utils := api.Group("/utils")
+		tool := api.Group("/tools")
 		{
-			// 测试接口
-			utils.GET("/preserve_host", Util.PreserveHost)
-			utils.GET("/weather", Util.Weather)
 			// ip 地址解析
-			utils.GET("/ip/position", Util.Ip)
-			// 地区
-			region := utils.Group("/region")
-			{
-				region.GET("/amap", Util.Amap)
-				region.GET("/location", Util.Location)
-			}
+			tool.GET("/location/ip", Tools.Ip)
+			tool.GET("/location", Tools.Location)
+			tool.GET("/location/latitude-longitude", Tools.Amap)
 		}
 		// websocket
 		auth := api.Group("/", middleware.LoginCheck())

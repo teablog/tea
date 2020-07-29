@@ -21,14 +21,14 @@ var GlobalRegion = cli.Command{
 		cli.StringFlag{
 			Name:     "csv",
 			Usage:    "--csv [path]",
-			EnvVar:   "__TEA_REGION_CSV",
+			EnvVar:   "_TEA_REGION_CSV",
 			FilePath: "",
 			Required: true,
 		},
 		cli.StringFlag{
 			Name:     "conf",
 			Usage:    "--conf [path]",
-			EnvVar:   "__TEA_CONF",
+			EnvVar:   "_TEA_CONF",
 			FilePath: "",
 			Required: true,
 		},
@@ -53,10 +53,11 @@ func globalRegion(ctx *cli.Context) error {
 	for _, record := range records {
 		buf.WriteString(fmt.Sprintf(`{ "index" : { "_index" : "%s", "_id" : "%s" } }`, consts.IndicesGlobalRegion, record[0]))
 		buf.WriteString("\n")
-		buf.WriteString(fmt.Sprintf(`{"pid":%s,"path":"%s","level":%s,"name":"%s","name_en":"%s","name_pinyin":"%s","code":"%s"}`,
-			record[1], record[2], record[3], record[4], record[5], record[6], record[7]))
+		buf.WriteString(fmt.Sprintf(`{"id":%s, "pid":%s,"path":"%s","level":%s,"name":"%s","name_en":"%s","name_pinyin":"%s","code":"%s"}`,
+			record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7]))
 		buf.WriteString("\n")
 	}
+	fmt.Println(buf.String())
 	resp, err := db.ES.Bulk(buf)
 	if err != nil {
 		return errors.Wrap(err, "es bulk execute failed")

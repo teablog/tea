@@ -14,7 +14,7 @@ var Start = cli.Command{
 		cli.StringFlag{
 			Name:     "conf",
 			Usage:    "-conf <path>",
-			EnvVar:   "_DOUYACUN_CONF",
+			EnvVar:   "_TEA_CONF",
 			Required: false,
 			Value:    "/data/web/tea.douyacun.com/configs/prod.ini",
 		},

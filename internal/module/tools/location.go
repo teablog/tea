@@ -1,16 +1,15 @@
-package util
+package tools
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-var Location _location
+var Location location
 
-type _location struct{}
-
+type location struct{}
 type amapString string
 
 func (a *amapString) UnmarshalJSON(b []byte) error {
@@ -59,7 +58,7 @@ type regeo struct {
 	} `json:"regeocode"`
 }
 
-func (*_location) FindByGeoCode(ctx *gin.Context, latitude, longitude string) (*addressComponent, error) {
+func (*location) FindByGeoCode(ctx context.Context, latitude, longitude string) (*addressComponent, error) {
 	url := "https://restapi.amap.com/v3/geocode/regeo?key=959aef6c8cf282cf66640c5ad83d8298&location=%s,%s&extensions=base"
 	resp, err := http.Get(fmt.Sprintf(url, latitude, longitude))
 	if err != nil {

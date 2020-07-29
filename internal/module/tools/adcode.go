@@ -1,25 +1,45 @@
-package util
+package tools
 
 import (
-	"github.com/teablog/tea/internal/consts"
-	"github.com/teablog/tea/internal/db"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
 	"io/ioutil"
 	"strings"
 )
 
-var AdCoder *AdCode
+var AdCode *AdCodeComponent
 
-type AdCode struct {
-	Name     string `json:"name"`
-	Adcode   string `json:"adcode"`
-	CityCode string `json:"city_code"`
+type AdCodeComponent struct {
+	Name   string `json:"name"`
+	Adcode string `json:"adcode"`
+	Code   string `json:"code"`
 }
 
-func (*AdCode) FindByName(ctx *gin.Context, name string) (*[]AdCode, error) {
+func (*AdCodeComponent) NewDefault() map[string]AdCodeComponent {
+	return map[string]AdCodeComponent{
+		"country": {
+			Name:   "中国",
+			Adcode: "",
+			Code:   "CN",
+		},
+		"city": {
+			Name:   "北京市",
+			Adcode: "110100",
+			Code:   "",
+		},
+		"province": {
+			Name:   "北京市",
+			Adcode: "110000",
+			Code:   "",
+		},
+	}
+}
+
+func (*AdCodeComponent) FindByName(ctx context.Context, name string) (*[]AdCodeComponent, error) {
 	body := fmt.Sprintf(`{
   "query": {
     "match": {
@@ -54,9 +74,9 @@ func (*AdCode) FindByName(ctx *gin.Context, name string) (*[]AdCode, error) {
 	if err = json.Unmarshal(r.Hits.Hits, &hits); err != nil {
 		return nil, err
 	}
-	var list []AdCode
+	var list []AdCodeComponent
 	for _, v := range hits {
-		var source AdCode
+		var source AdCodeComponent
 		if err = json.Unmarshal(v.Source, &source); err == nil {
 			list = append(list, source)
 		}
@@ -64,7 +84,7 @@ func (*AdCode) FindByName(ctx *gin.Context, name string) (*[]AdCode, error) {
 	return &list, nil
 }
 
-func (*AdCode) FindByNamePingyin(ctx *gin.Context, pingyin string) (*[]AdCode, error) {
+func (*AdCodeComponent) FindByNamePingyin(ctx context.Context, pingyin string) (*[]AdCodeComponent, error) {
 	body := fmt.Sprintf(`{
   "query": {
     "prefix": {
@@ -90,7 +110,7 @@ func (*AdCode) FindByNamePingyin(ctx *gin.Context, pingyin string) (*[]AdCode, e
 	return nil, nil
 }
 
-func (a *AdCode) FindCity(ctx *gin.Context, name string) (*AdCode, error) {
+func (a *AdCodeComponent) FindCity(ctx context.Context, name string) (*AdCodeComponent, error) {
 	if regions, err := a.FindByName(ctx, name); err != nil {
 		return nil, err
 	} else {
@@ -103,7 +123,7 @@ func (a *AdCode) FindCity(ctx *gin.Context, name string) (*AdCode, error) {
 	}
 }
 
-func (*AdCode) FindByCode(ctx *gin.Context, code string) (*AdCode, error) {
+func (*AdCodeComponent) FindByCode(ctx context.Context, code string) (*AdCodeComponent, error) {
 	query := fmt.Sprintf(`{
   "query": {
     "term": {
@@ -133,7 +153,7 @@ func (*AdCode) FindByCode(ctx *gin.Context, code string) (*AdCode, error) {
 		if err = json.Unmarshal(r.Hits.Hits, &hits); err != nil {
 			return nil, err
 		}
-		var source AdCode
+		var source AdCodeComponent
 		if err = json.Unmarshal(hits[0].Source, &source); err != nil {
 			return nil, err
 		}
@@ -141,32 +161,37 @@ func (*AdCode) FindByCode(ctx *gin.Context, code string) (*AdCode, error) {
 	}
 }
 
-func (a *AdCode) BelongProvince(ctx *gin.Context, code string) (*AdCode, error) {
+func (a *AdCodeComponent) BelongProvince(ctx context.Context, code string) (*AdCodeComponent, error) {
 	return a.FindByCode(ctx, code[:2]+"0000")
 }
 
-func (a *AdCode) BelongCity(ctx *gin.Context, code string) (*AdCode, error) {
+func (a *AdCodeComponent) BelongCity(ctx context.Context, code string) (*AdCodeComponent, error) {
 	return a.FindByCode(ctx, code[:4]+"00")
 }
 
-func (*AdCode) IsProvince(code string) bool {
+func (*AdCodeComponent) IsProvince(code string) bool {
 	return code[2:] == "0000"
 }
 
-func (*AdCode) IsCity(code string) bool {
+func (*AdCodeComponent) IsCity(code string) bool {
 	return code[2:4] != "00" && code[4:] == "00"
 }
 
-func (*AdCode) IsDistrict(code string) bool {
+func (*AdCodeComponent) IsDistrict(code string) bool {
 	return code[2:4] != "00" && code[4:] != "00"
 }
 
-func (*AdCode) CanFindCity(code string) bool {
+func (*AdCodeComponent) CanFindCity(code string) bool {
 	return code[2:4] != "00"
 }
 
-func (a *AdCode) Component(ctx *gin.Context, code string) (res map[string]*AdCode, err error) {
-	res = make(map[string]*AdCode)
+func (a *AdCodeComponent) Component(ctx context.Context, code string) (res map[string]*AdCodeComponent, err error) {
+	res = make(map[string]*AdCodeComponent)
+	res["country"] = &AdCodeComponent{
+		Name:   "中国",
+		Adcode: "",
+		Code:   "CN",
+	}
 	if res["province"], err = a.BelongProvince(ctx, code); err != nil {
 		return
 	}

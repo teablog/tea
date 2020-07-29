@@ -34,6 +34,9 @@ const (
       },
       "pid": {
         "type": "long"
+      },
+      "id": {
+        "type": "long"
       }
     }
   },
