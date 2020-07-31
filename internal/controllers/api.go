@@ -38,6 +38,11 @@ func NewRouter(router *gin.Engine) {
 			tool.GET("/location/latitude-longitude", Tools.Amap)
 			tool.GET("/location", Tools.Location)
 		}
+		// 帮助中心
+		help := api.Group("/helper")
+		{
+			help.GET("/token", Help.Token)
+		}
 		// websocket
 		auth := api.Group("/", middleware.LoginCheck())
 		{
