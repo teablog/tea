@@ -91,7 +91,7 @@ func (g *_github) User() (err error) {
 	authorization.WriteString(" ")
 	authorization.WriteString(g.t.AccessToken)
 	query := gin.H{
-		"url": "https://tea.github.com/user",
+		"url": "https://api.github.com/user",
 		"method": "GET",
 		"header": gin.H{
 			"Authorization": authorization.String(),
