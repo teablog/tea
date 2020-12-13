@@ -1,7 +1,7 @@
 package consts
 
 const (
-	IndicesMessageConst = "message"
+	IndicesMessagesConst  = "messages"
 	IndicesMessageMapping = `
 {
   "settings": {
@@ -26,7 +26,7 @@ const (
   },
   "mappings": {
     "properties": {
-      "channel_id": {
+      "article_id": {
         "type": "keyword"
       },
       "content": {

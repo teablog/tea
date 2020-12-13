@@ -1,11 +1,11 @@
 package chat
 
 import (
+	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/derror"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/account"
-	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"time"
@@ -51,6 +51,8 @@ type Client struct {
 	send chan []byte
 
 	account *account.Account
+
+	articleId string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -61,11 +63,11 @@ type Client struct {
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error { _ = c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -77,7 +79,7 @@ func (c *Client) readPump() {
 		logger.Debugf("[%s] %s %s", c.conn.RemoteAddr(), time.Now().String(), message)
 		m := ClientMessage{}
 		if err := json.Unmarshal(message, &m); err == nil {
-			c.hub.broadcast <- NewDefaultMsg(c, m.Content, m.ChannelId)
+			c.hub.broadcast <- NewMessage(c, m)
 		} else {
 			logger.Errorf("client read Pump error: %s", err)
 		}
@@ -93,36 +95,36 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 	for {
 		select {
 		case message, ok := <-c.send:
 			// 写超时
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
-			w.Write(message)
+			_, _ = w.Write(message)
 
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
+				_, _ = w.Write(newline)
+				_, _ = w.Write(<-c.send)
 			}
 
 			if err := w.Close(); err != nil {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}

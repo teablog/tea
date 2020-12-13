@@ -1,21 +1,19 @@
 package chat
 
 import (
-	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/logger"
 )
 
 type Responser interface {
-	Members() []string
 	Bytes() []byte
-	GetChannelID() string
+	GetArticleID() string
 }
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
 	// Registered clients.
-	clients map[string]*Client
+	clientHub map[string]map[*Client]struct{}
 
 	// Inbound messages from the clients.
 	broadcast chan Responser
@@ -32,7 +30,7 @@ func NewHub() *Hub {
 		broadcast:  make(chan Responser),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[string]*Client),
+		clientHub:  make(map[string]map[*Client]struct{}),
 	}
 }
 
@@ -40,36 +38,26 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			if otherClient, ok := h.clients[client.account.Id]; ok {
-				otherClient.conn.Close()
-				client.send <- NewTipMessage("该账号的其他连接已关闭").Bytes()
+			// 注册客户端
+			if _, ok := h.clientHub[client.articleId]; !ok {
+				// 客户端已存在 ？
+			} else {
+				h.clientHub[client.articleId] = map[*Client]struct{}{client: {}}
 			}
-			h.clients[client.account.Id] = client
 		case client := <-h.unregister:
-			if _, ok := h.clients[client.account.Id]; ok {
-				delete(h.clients, client.account.Id)
+			if clients, ok := h.clientHub[client.articleId]; ok {
+				delete(clients, client)
 				close(client.send)
 			}
 		case message := <-h.broadcast:
 			logger.Debugf("广播一条新消息: %s", message.Bytes())
-			if message.GetChannelID() == consts.GlobalChannelId {
-				for id, client := range h.clients {
+			if clients, ok := h.clientHub[message.GetArticleID()]; ok {
+				for client, _ := range clients {
 					select {
 					case client.send <- message.Bytes():
 					default:
 						close(client.send)
-						delete(h.clients, id)
-					}
-				}
-			} else {
-				for _, id := range message.Members() {
-					if client, ok := h.clients[id]; ok {
-						select {
-						case client.send <- message.Bytes():
-						default:
-							close(client.send)
-							delete(h.clients, id)
-						}
+						delete(clients, client)
 					}
 				}
 			}

@@ -41,7 +41,7 @@ var AdCode = cli.Command{
 func adcode(c *cli.Context) error {
 	config.Init(c.String("conf"))
 	db.NewElasticsearch(config.GetKey("elasticsearch::address").Strings(","), config.GetKey("elasticsearch::user").String(), config.GetKey("elasticsearch::password").String())
-	logger.NewLogger(config.GetLogFD())
+	logger.NewDefaultLogger(config.GetLogFD())
 	fp, err := os.Open(c.String("csv"))
 	if err != nil {
 		return err

@@ -50,9 +50,8 @@ func NewRouter(router *gin.Engine) {
 				WS.Join(context, hub)
 			})
 			auth.POST("/ws/channel", Channel.Create)
-			auth.GET("/ws/channel/subscribe", Channel.subscribe)
-			auth.GET("/ws/channel/messages", Channel.Messages)
 			auth.GET("/account/list", Account.List)
+			auth.GET("/ws/article/messages", Article.Messages)
 		}
 		api.GET("/seo/sitemap", Seo.SiteMap)
 	}

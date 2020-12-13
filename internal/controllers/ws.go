@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"github.com/teablog/tea/internal/module/chat"
 	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/module/chat"
 )
 
 var WS _ws

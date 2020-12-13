@@ -13,16 +13,15 @@ import (
 type Level zapcore.Level
 
 var (
-	Green            = string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
-	White            = string([]byte{27, 91, 57, 48, 59, 52, 55, 109})
-	Yellow           = string([]byte{27, 91, 57, 48, 59, 52, 51, 109})
-	Red              = string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
-	Blue             = string([]byte{27, 91, 57, 55, 59, 52, 52, 109})
-	Magenta          = string([]byte{27, 91, 57, 55, 59, 52, 53, 109})
-	Cyan             = string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
-	Reset            = string([]byte{27, 91, 48, 109})
+	Green   = string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
+	White   = string([]byte{27, 91, 57, 48, 59, 52, 55, 109})
+	Yellow  = string([]byte{27, 91, 57, 48, 59, 52, 51, 109})
+	Red     = string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
+	Blue    = string([]byte{27, 91, 57, 55, 59, 52, 52, 109})
+	Magenta = string([]byte{27, 91, 57, 55, 59, 52, 53, 109})
+	Cyan    = string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
+	Reset   = string([]byte{27, 91, 48, 109})
 )
-
 
 const (
 	// DebugLevel logs are typically voluminous, and are usually disabled in
@@ -52,7 +51,7 @@ var (
 	level = zapcore.InfoLevel
 )
 
-func NewLogger(out io.Writer) {
+func NewDefaultLogger(out io.Writer) {
 	priority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= level
 	})
@@ -62,6 +61,19 @@ func NewLogger(out io.Writer) {
 	core := zapcore.NewCore(zapcore.NewConsoleEncoder(config), w, priority)
 	logger := zap.New(core)
 	log = logger.Sugar()
+}
+
+func NewLogger(out io.Writer, l string) {
+	priority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= level
+	})
+	w := zapcore.AddSync(out)
+	config := zap.NewProductionEncoderConfig()
+	config.EncodeTime = zapcore.ISO8601TimeEncoder
+	core := zapcore.NewCore(zapcore.NewConsoleEncoder(config), w, priority)
+	logger := zap.New(core)
+	log = logger.Sugar()
+	SetLevel(l)
 }
 
 func SetLevel(l string) {
@@ -109,11 +121,11 @@ func Errorf(template string, args ...interface{}) {
 	log.Errorf(template, args...)
 }
 
-func Wrapf(err error, template string, args ...interface{})  {
+func Wrapf(err error, template string, args ...interface{}) {
 	buf := new(bytes.Buffer) // the returned data
 	e := errors.WithStack(err.(error))
-	fmt.Fprintf(buf,"%+v", e)
-	Errorf("[Recovery] panic recovered: %s",   buf.String())
+	fmt.Fprintf(buf, "%+v", e)
+	Errorf("[Recovery] panic recovered: %s", buf.String())
 }
 
 func Fatal(args ...interface{}) {

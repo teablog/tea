@@ -31,8 +31,7 @@ func deployAction(c *cli.Context) (err error) {
 	// 加载配置文件
 	config.Init(c.String("conf"))
 	// 设置运行环境
-	logger.NewLogger(config.GetLogFD())
-	logger.SetLevel("debug")
+	logger.NewLogger(config.GetLogFD(), "debug")
 	// 数据库
 	db.NewElasticsearch(config.GetKey("elasticsearch::address").Strings(","), config.GetKey("elasticsearch::user").String(), config.GetKey("elasticsearch::password").String())
 	deploy.Run(c.String("dir"))

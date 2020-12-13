@@ -27,7 +27,7 @@ func Server() {
 		err    error
 	)
 	// 日志
-	logger.NewLogger(config.GetLogFD())
+	logger.NewLogger(config.GetLogFD(), config.GetKey("global::env").String())
 	// 数据库
 	db.NewElasticsearch(config.GetKey("elasticsearch::address").Strings(","), config.GetKey("elasticsearch::user").String(), config.GetKey("elasticsearch::password").String())
 	// 启动gin

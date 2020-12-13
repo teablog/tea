@@ -7,6 +7,6 @@ type ChannelCreateValidator struct {
 }
 
 type ChannelMessagesValidator struct {
-	ChannelId string `validate:"required" json:"channel_id" form:"channel_id"`
-	Before    int64 `validate:"required" json:"before" form:"before"`
+	ArticleId string `validate:"required" json:"article_id" form:"article_id"`
+	Before    int64  `validate:"required" json:"before" form:"before"`
 }

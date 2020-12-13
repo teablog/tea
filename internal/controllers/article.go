@@ -1,14 +1,17 @@
 package controllers
 
 import (
+	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/article"
-	"errors"
-	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/module/chat"
+	"github.com/teablog/tea/internal/validate"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -72,4 +75,25 @@ func (*_article) Search(c *gin.Context) {
 	}
 	helper.Success(c, gin.H{"total": total, "data": data})
 	return
+}
+
+func (*_article) Messages(ctx *gin.Context) {
+	var vld validate.ChannelMessagesValidator
+	if err := ctx.ShouldBindQuery(&vld); err != nil {
+		helper.Fail(ctx, err)
+		return
+	}
+	if err := validate.DoValidate(vld); err != nil {
+		helper.Fail(ctx, err)
+		return
+	}
+	sec := int64(vld.Before / 1000)
+	nsec := int64(vld.Before%1000) * 1000000
+	before := time.Unix(sec, nsec)
+	total, data, err := chat.Message.FindMessages(vld.ArticleId, before)
+	if err != nil {
+		helper.Fail(ctx, err)
+		return
+	}
+	helper.Success(ctx, gin.H{"total": total, "messages": data})
 }
