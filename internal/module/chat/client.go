@@ -133,7 +133,7 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(ctx *gin.Context, hub *Hub) {
+func ServeWs(ctx *gin.Context, hub *Hub, articleId string) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		logger.Wrapf(err, "[websocket]")
@@ -143,7 +143,7 @@ func ServeWs(ctx *gin.Context, hub *Hub) {
 	if !ok {
 		panic(derror.Unauthorized{})
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a.(*account.Account), articleId: "8c110cb1533e75217e89bdfd4c0b1e7a"}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a.(*account.Account), articleId: articleId}
 	client.hub.register <- client
 	//hub.broadcast <- NewSystemMsg(fmt.Sprintf("欢迎 [%s] 加入", client.account.Name), consts.GlobalChannelId)
 	go client.writePump()
