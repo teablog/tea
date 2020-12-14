@@ -95,5 +95,5 @@ func (*_article) Messages(ctx *gin.Context) {
 		helper.Fail(ctx, err)
 		return
 	}
-	helper.Success(ctx, gin.H{"total": total, "messages": data})
+	helper.Success(ctx, gin.H{"total": total, "list": data})
 }

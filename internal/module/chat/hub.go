@@ -41,8 +41,10 @@ func (h *Hub) Run() {
 			// 注册客户端
 			if _, ok := h.clientHub[client.articleId]; !ok {
 				// 客户端已存在 ？
+				h.clientHub[client.articleId] = make(map[*Client]struct{})
+				h.clientHub[client.articleId][client] = struct{}{}
 			} else {
-				h.clientHub[client.articleId] = map[*Client]struct{}{client: {}}
+				h.clientHub[client.articleId][client] = struct{}{}
 			}
 		case client := <-h.unregister:
 			if clients, ok := h.clientHub[client.articleId]; ok {

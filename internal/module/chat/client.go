@@ -136,14 +136,14 @@ func (c *Client) writePump() {
 func ServeWs(ctx *gin.Context, hub *Hub) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		log.Println(err)
+		logger.Wrapf(err, "[websocket]")
 		return
 	}
 	a, ok := ctx.Get("account")
 	if !ok {
 		panic(derror.Unauthorized{})
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a.(*account.Account)}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a.(*account.Account), articleId: "8c110cb1533e75217e89bdfd4c0b1e7a"}
 	client.hub.register <- client
 	//hub.broadcast <- NewSystemMsg(fmt.Sprintf("欢迎 [%s] 加入", client.account.Name), consts.GlobalChannelId)
 	go client.writePump()

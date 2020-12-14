@@ -123,9 +123,10 @@ func Errorf(template string, args ...interface{}) {
 
 func Wrapf(err error, template string, args ...interface{}) {
 	buf := new(bytes.Buffer) // the returned data
+	_, _ = fmt.Fprintf(buf, template, args...)
 	e := errors.WithStack(err.(error))
-	fmt.Fprintf(buf, "%+v", e)
-	Errorf("[Recovery] panic recovered: %s", buf.String())
+	_, _ = fmt.Fprintf(buf, "%+v", e)
+	Errorf(buf.String())
 }
 
 func Fatal(args ...interface{}) {

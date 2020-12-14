@@ -1,19 +1,18 @@
 package middleware
 
 import (
+	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/derror"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/account"
-	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"net/url"
 )
 
 func LoginCheck() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		abort := func() {
-			q := url.Values{}
-			q.Add("redirect_uri", "/chat")
+			//q := url.Values{}
+			//q.Add("redirect_uri", "/chat")
 			account.NewAccount().ExpireCookie(ctx)
 			panic(derror.Unauthorized{})
 		}
