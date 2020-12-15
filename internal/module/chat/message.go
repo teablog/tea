@@ -9,6 +9,7 @@ import (
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/account"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -28,17 +29,13 @@ const (
 	OnlineMsg msgType = "ONLINE"
 )
 
-type shortAcct struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
 type ServerMessage struct {
 	// 消息id
 	Id string `json:"id"`
 	// 时间
 	Date time.Time `json:"date"`
 	// 发送者
-	Sender shortAcct `json:"sender"`
+	Sender *account.Account `json:"sender"`
 	// 类型
 	Type msgType `json:"type"`
 	// 内容
@@ -71,11 +68,8 @@ func (m serverMessageSlice) Swap(i, j int) {
 
 func NewMessage(c *Client, cm ClientMessage) *ServerMessage {
 	m := &ServerMessage{
-		Content: cm.Content,
-		Sender: shortAcct{
-			Id:   c.account.Id,
-			Name: c.account.Name,
-		},
+		Content:   cm.Content,
+		Sender:    c.account,
 		Type:      cm.Type,
 		Date:      time.Now(),
 		ArticleId: cm.ArticleId,
