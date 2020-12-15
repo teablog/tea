@@ -130,20 +130,16 @@ var Message *_message
 
 type _message struct{}
 
-func (*_message) FindMessages(articleId string, before time.Time) (int, serverMessageSlice, error) {
-	query := fmt.Sprintf(`
-{
-  "query": {
-    "bool": {
-      "must": [
-        {"term": {"article_id":  "%s"}},
-        {"range": { "date": {"lt": "%s"}}}
-      ]
-    }
-  },
-  "sort": { "date": { "order": "desc" } },
-  "size": 20
-}`, articleId, before.Format(consts.EsTimeFormat))
+func (*_message) FindMessages(articleId string, before, after time.Time) (int, serverMessageSlice, error) {
+	must := []string{fmt.Sprintf(`{"term": {"article_id": "%s"}}`, articleId)}
+	if !before.IsZero() {
+		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"lt": "%s"}}}`, before.Format(consts.EsTimeFormat))))
+	}
+	if !after.IsZero() {
+		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"gt": "%s"}}}`, after.Format(consts.EsTimeFormat))))
+	}
+	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "desc" } }, "size": 20}`, strings.Join(must, ","))
+
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesMessagesConst),
@@ -184,7 +180,6 @@ func (*_message) FindMessages(articleId string, before time.Time) (int, serverMe
 	for _, v := range data {
 		rows = append(rows, v.Source)
 	}
-
 	sort.Sort(rows)
 
 	return r.Hits.Total.Value, rows, nil
