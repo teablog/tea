@@ -12,6 +12,7 @@ import (
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"time"
 )
@@ -149,16 +150,16 @@ func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serve
 		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"gt": "%s"}}}`, after.Format(consts.EsTimeFormat))))
 	}
 	var (
-		sort       = "desc"
-		size int64 = 20
+		order       = "desc"
+		size  int64 = 20
 	)
 	if req.Sort == "asc" {
-		sort = "asc"
+		order = "asc"
 	}
 	if req.Size > 0 {
 		size = req.Size
 	}
-	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d}`, strings.Join(must, ","), sort, size)
+	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d}`, strings.Join(must, ","), order, size)
 
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(
