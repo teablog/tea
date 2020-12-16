@@ -10,8 +10,8 @@ import (
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/account"
+	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
-	"sort"
 	"strings"
 	"time"
 )
@@ -130,15 +130,35 @@ var Message *_message
 
 type _message struct{}
 
-func (*_message) FindMessages(articleId string, before, after time.Time) (int, serverMessageSlice, error) {
-	must := []string{fmt.Sprintf(`{"term": {"article_id": "%s"}}`, articleId)}
+func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serverMessageSlice, error) {
+	var (
+		before time.Time
+		after  time.Time
+	)
+	must := []string{fmt.Sprintf(`{"term": {"article_id": "%s"}}`, req.ArticleId)}
+	if req.Before > 0 {
+		before = time.Unix(req.Before/1000, int64(req.Before%1000)*1000000)
+	}
+	if req.After > 0 {
+		after = time.Unix(req.After/1000, int64(req.After%1000)*1000000)
+	}
 	if !before.IsZero() {
 		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"lt": "%s"}}}`, before.Format(consts.EsTimeFormat))))
 	}
 	if !after.IsZero() {
 		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"gt": "%s"}}}`, after.Format(consts.EsTimeFormat))))
 	}
-	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "desc" } }, "size": 20}`, strings.Join(must, ","))
+	var (
+		sort       = "desc"
+		size int64 = 20
+	)
+	if req.Sort == "asc" {
+		sort = "asc"
+	}
+	if req.Size > 0 {
+		size = req.Size
+	}
+	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d}`, strings.Join(must, ","), sort, size)
 
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(

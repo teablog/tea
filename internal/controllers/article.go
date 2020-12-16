@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var (
@@ -87,17 +86,8 @@ func (*_article) Messages(ctx *gin.Context) {
 		helper.Fail(ctx, err)
 		return
 	}
-	var (
-		before time.Time
-		after  time.Time
-	)
-	if vld.Before > 0 {
-		before = time.Unix(vld.Before/1000, int64(vld.Before%1000)*1000000)
-	}
-	if vld.After > 0 {
-		after = time.Unix(vld.After/1000, int64(vld.After%1000)*1000000)
-	}
-	total, data, err := chat.Message.FindMessages(vld.ArticleId, before, after)
+
+	total, data, err := chat.Message.FindMessages(vld)
 	if err != nil {
 		helper.Fail(ctx, err)
 		return
