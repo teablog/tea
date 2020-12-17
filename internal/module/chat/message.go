@@ -129,7 +129,8 @@ func (m *ServerMessage) store() bool {
 
 var Message *_message
 
-type _message struct{}
+type _message struct{
+}
 
 func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serverMessageSlice, error) {
 	var (
@@ -152,6 +153,7 @@ func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serve
 	var (
 		order       = "desc"
 		size  int64 = 20
+		from        = ``
 	)
 	if req.Sort == "asc" {
 		order = "asc"
@@ -159,7 +161,10 @@ func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serve
 	if req.Size > 0 {
 		size = req.Size
 	}
-	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d}`, strings.Join(must, ","), order, size)
+	if req.Page > 0 {
+		from = fmt.Sprintf(`,"from": %d`, (req.Page-1)*size)
+	}
+	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d %s}`, strings.Join(must, ","), order, size, from)
 
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(
