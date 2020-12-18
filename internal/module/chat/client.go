@@ -3,8 +3,8 @@ package chat
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/teablog/tea/internal/derror"
 	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"log"
 	"net/http"
@@ -79,7 +79,7 @@ func (c *Client) readPump() {
 		logger.Debugf("[%s] %s %s", c.conn.RemoteAddr(), time.Now().String(), message)
 		m := ClientMessage{}
 		if err := json.Unmarshal(message, &m); err == nil {
-			c.hub.broadcast <- NewMessage(c, m)
+			c.hub.broadcast <- NewMessage(c.account, m)
 		} else {
 			logger.Errorf("client read Pump error: %s", err)
 		}
@@ -139,15 +139,16 @@ func ServeWs(ctx *gin.Context, hub *Hub, articleId string) {
 		logger.Wrapf(err, "[websocket]")
 		return
 	}
-	a, ok := ctx.Get("account")
-	if !ok {
-		panic(derror.Unauthorized{})
+	a := middleware.GetAccount(ctx)
+	if a == nil {
+		return
+	} else {
+		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a, articleId: articleId}
+		client.hub.register <- client
+		//hub.broadcast <- NewSystemMsg(fmt.Sprintf("欢迎 [%s] 加入", client.account.Name), consts.GlobalChannelId)
+		go client.writePump()
+		go client.readPump()
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a.(*account.Account), articleId: articleId}
-	client.hub.register <- client
-	//hub.broadcast <- NewSystemMsg(fmt.Sprintf("欢迎 [%s] 加入", client.account.Name), consts.GlobalChannelId)
-	go client.writePump()
-	go client.readPump()
 }
 
 func (c *Client) toMap() map[string]interface{} {

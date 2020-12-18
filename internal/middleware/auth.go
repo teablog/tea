@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+const (
+	Account = "__account__"
+)
+
 func LoginCheck() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cookieStr, err := ctx.Cookie("douyacun")
@@ -30,7 +34,15 @@ func LoginCheck() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		ctx.Set("account", cookie.Account)
+		ctx.Set(Account, cookie.Account)
 		ctx.Next()
+	}
+}
+
+func GetAccount(ctx *gin.Context) *account.Account {
+	if acct, ok := ctx.Get(Account); ok {
+		return acct.(*account.Account)
+	} else {
+		return nil
 	}
 }

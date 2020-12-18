@@ -1,12 +1,16 @@
 package chat
 
 import (
+	"fmt"
 	"github.com/teablog/tea/internal/logger"
+	"sync"
+	"time"
 )
 
 type Responser interface {
 	Bytes() []byte
 	GetArticleID() string
+	GetAccountID() string
 }
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -23,6 +27,9 @@ type Hub struct {
 
 	// Unregister requests from clients.
 	unregister chan *Client
+
+	// message storage
+	messageHub *messageHub
 }
 
 func NewHub() *Hub {
@@ -31,10 +38,12 @@ func NewHub() *Hub {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clientHub:  make(map[string]map[*Client]struct{}),
+		messageHub: newMessageHub(10),
 	}
 }
 
 func (h *Hub) Run() {
+	go h.messageHub.Start()
 	for {
 		select {
 		case client := <-h.register:
@@ -54,6 +63,7 @@ func (h *Hub) Run() {
 		case message := <-h.broadcast:
 			logger.Debugf("广播一条新消息: %s", message.Bytes())
 			if clients, ok := h.clientHub[message.GetArticleID()]; ok {
+				h.messageHub.storager <- message.(*ServerMessage)
 				for client, _ := range clients {
 					select {
 					case client.send <- message.Bytes():
@@ -64,5 +74,67 @@ func (h *Hub) Run() {
 				}
 			}
 		}
+	}
+}
+
+// MessageHub 临时缓存消息，超过配置就会写入磁盘
+// 1. 10条
+// 2. 1分钟
+type messageHub struct {
+	pos      int // 当前位置
+	sw       sync.Mutex
+	messages []*ServerMessage
+	storager chan *ServerMessage
+	len      int
+}
+
+func newMessageHub(len int) *messageHub {
+	return &messageHub{
+		pos:      0,
+		sw:       sync.Mutex{},
+		messages: make([]*ServerMessage, len),
+		storager: make(chan *ServerMessage, len),
+		len:      len,
+	}
+}
+
+// store: 同一篇文章，同一个账户连续发表的内容合并
+func (h *messageHub) store() {
+	messages := make(ServerMessageSlice, 0, h.len)
+	for i, j := 0, 0; i < h.pos; i++ {
+		if i > 0 {
+			if messages[j-1].GetArticleID() == h.messages[i].GetArticleID() && messages[j-1].GetAccountID() == h.messages[i].GetAccountID() {
+				messages[j-1].Content = fmt.Sprintf("%s <br /> %s", messages[j-1].Content, h.messages[i].Content)
+				continue
+			}
+		}
+		messages = append(messages, h.messages[i])
+		j++
+	}
+	messages.store()
+	h.pos = 0
+}
+
+func (h *messageHub) Start() {
+	ticker := time.NewTicker(1 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				h.sw.Lock()
+				h.store()
+				h.sw.Unlock()
+			}
+		}
+	}()
+	for message := range h.storager {
+		h.sw.Lock()
+		if h.pos < h.len {
+			h.messages[h.pos] = message
+			h.pos++
+		} else {
+			h.store()
+		}
+		h.sw.Unlock()
 	}
 }

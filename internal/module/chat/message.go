@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
@@ -67,16 +69,16 @@ func (m serverMessageSlice) Swap(i, j int) {
 	(m)[i], (m)[j] = (m)[j], (m)[i]
 }
 
-func NewMessage(c *Client, cm ClientMessage) *ServerMessage {
+func NewMessage(acct *account.Account, cm ClientMessage) *ServerMessage {
 	m := &ServerMessage{
 		Content:   cm.Content,
-		Sender:    c.account,
+		Sender:    acct,
 		Type:      cm.Type,
 		Date:      time.Now(),
 		ArticleId: cm.ArticleId,
 	}
 	m.Id = m.GenId()
-	m.store()
+	//m.store()
 	return m
 }
 
@@ -100,28 +102,29 @@ func (m *ServerMessage) GetArticleID() string {
 	return m.ArticleId
 }
 
-func (m *ServerMessage) store() bool {
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(m); err != nil {
-		logger.Wrapf(err, "message store json error")
-		return false
+func (m *ServerMessage) GetAccountID() string {
+	return m.Sender.Id
+}
+
+type ServerMessageSlice []*ServerMessage
+
+func (rows ServerMessageSlice) store() bool {
+	buf := bytes.NewBuffer(nil)
+	for _, v := range rows {
+		buf.WriteString(fmt.Sprintf(`{ "index" : { "_index" : "%s", "_id" : "%s" } }`, consts.IndicesMessagesConst, v.Id))
+		buf.WriteString("\n")
+		buf.Write(v.Bytes())
 	}
-	if m.Id == "" {
-		return false
-	}
-	res, err := db.ES.Index(
-		consts.IndicesMessagesConst,
-		strings.NewReader(buf.String()),
-		db.ES.Index.WithDocumentID(m.Id),
-	)
+	logger.Debugf("[bulk]: %s", buf.String())
+	res, err := db.ES.Bulk(buf)
 	if err != nil {
-		logger.Wrapf(err, "message store es error")
+		logger.Wrapf(err, "[ES] server messages bulk save err: %s", err.Error())
 		return false
 	}
 	defer res.Body.Close()
 	if res.IsError() {
 		resp, _ := ioutil.ReadAll(res.Body)
-		logger.Errorf("[%d] es response: %s", res.StatusCode, string(resp))
+		logger.Errorf("[ES] es response: %s", res.StatusCode, string(resp))
 		return false
 	}
 	return true
@@ -129,9 +132,10 @@ func (m *ServerMessage) store() bool {
 
 var Message *_message
 
-type _message struct{
+type _message struct {
 }
 
+// FindMessages 获取评论列表
 func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serverMessageSlice, error) {
 	var (
 		before time.Time
@@ -209,4 +213,15 @@ func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serve
 	sort.Sort(rows)
 
 	return r.Hits.Total.Value, rows, nil
+}
+
+// SendMessage 评论
+func (*_message) SendMessage(ctx *gin.Context, hub *Hub, message ClientMessage) error {
+	acct := middleware.GetAccount(ctx)
+	if acct != nil {
+		hub.broadcast <- NewMessage(acct, message)
+		return nil
+	} else {
+		return errors.New("")
+	}
 }
