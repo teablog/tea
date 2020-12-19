@@ -48,9 +48,9 @@ type ServerMessage struct {
 }
 
 type ClientMessage struct {
-	Content   string  `json:"content"`
-	ArticleId string  `json:"article_id"`
-	Type      msgType `json:"type"`
+	Content   string  `json:"content" form:"content"`
+	ArticleId string  `json:"article_id" form:"article_id"`
+	Type      msgType `json:"type" form:"type"`
 }
 
 // 倒排获取30条
@@ -78,7 +78,6 @@ func NewMessage(acct *account.Account, cm ClientMessage) *ServerMessage {
 		ArticleId: cm.ArticleId,
 	}
 	m.Id = m.GenId()
-	//m.store()
 	return m
 }
 
@@ -109,6 +108,9 @@ func (m *ServerMessage) GetAccountID() string {
 type ServerMessageSlice []*ServerMessage
 
 func (rows ServerMessageSlice) store() bool {
+	if len(rows) == 0 {
+		return false
+	}
 	buf := bytes.NewBuffer(nil)
 	for _, v := range rows {
 		buf.WriteString(fmt.Sprintf(`{ "index" : { "_index" : "%s", "_id" : "%s" } }`, consts.IndicesMessagesConst, v.Id))
@@ -136,7 +138,7 @@ type _message struct {
 }
 
 // FindMessages 获取评论列表
-func (*_message) FindMessages(req validate.ChannelMessagesValidator) (int, serverMessageSlice, error) {
+func (*_message) FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, error) {
 	var (
 		before time.Time
 		after  time.Time

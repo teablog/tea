@@ -77,7 +77,7 @@ func (*_article) Search(c *gin.Context) {
 }
 
 func (*_article) Messages(ctx *gin.Context) {
-	var vld validate.ChannelMessagesValidator
+	var vld validate.MessagesValidator
 	if err := ctx.ShouldBindQuery(&vld); err != nil {
 		helper.Fail(ctx, err)
 		return
@@ -93,4 +93,19 @@ func (*_article) Messages(ctx *gin.Context) {
 		return
 	}
 	helper.Success(ctx, gin.H{"total": total, "list": data})
+}
+
+func (*_article) Comment(hub *chat.Hub) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var message validate.ClientMessage
+		if err := ctx.ShouldBindQuery(&message); err != nil {
+			helper.Fail(ctx, err)
+			return
+		}
+		//if err := chat.Message.SendMessage(ctx, hub, message); err != nil {
+		//	helper.Fail(ctx, err)
+		//	return
+		//}
+		helper.Success(ctx, "success")
+	}
 }

@@ -49,9 +49,9 @@ func NewRouter(router *gin.Engine) {
 			auth.GET("/ws/join", func(context *gin.Context) {
 				WS.Join(context, hub)
 			})
-			auth.POST("/ws/channel", Channel.Create)
 			auth.GET("/account/list", Account.List)
 			auth.GET("/ws/article/messages", Article.Messages)
+			auth.POST("/ws/article/comment", Article.Comment(hub))
 		}
 		api.GET("/seo/sitemap", Seo.SiteMap)
 	}
