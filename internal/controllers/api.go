@@ -52,7 +52,7 @@ func NewRouter(router *gin.Engine) {
 			auth.GET("/account/list", Account.List)
 			auth.POST("/ws/article/comment", Article.Comment(hub))
 		}
-		auth.GET("/ws/article/messages", Article.Messages)
+		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
 	}
 	router.GET("/ping", func(c *gin.Context) {
