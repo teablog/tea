@@ -97,15 +97,15 @@ func (*_article) Messages(ctx *gin.Context) {
 
 func (*_article) Comment(hub *chat.Hub) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var message validate.ClientMessage
-		if err := ctx.ShouldBindQuery(&message); err != nil {
+		var message chat.ClientMessage
+		if err := ctx.Bind(&message); err != nil {
 			helper.Fail(ctx, err)
 			return
 		}
-		//if err := chat.Message.SendMessage(ctx, hub, message); err != nil {
-		//	helper.Fail(ctx, err)
-		//	return
-		//}
+		if err := chat.Message.SendMessage(ctx, hub, message); err != nil {
+			helper.Fail(ctx, err)
+			return
+		}
 		helper.Success(ctx, "success")
 	}
 }

@@ -9,8 +9,3 @@ type MessagesValidator struct {
 	Page      int64  `json:"page" form:"page"`
 }
 
-type ClientMessage struct {
-	Content   string `json:"content" form:"content"`
-	ArticleId string `json:"article_id" form:"article_id"`
-	Type      string `json:"type" form:"type"`
-}
