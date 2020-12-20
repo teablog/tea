@@ -50,9 +50,9 @@ func NewRouter(router *gin.Engine) {
 				WS.Join(context, hub)
 			})
 			auth.GET("/account/list", Account.List)
-			auth.GET("/ws/article/messages", Article.Messages)
+			auth.POST("/ws/article/comment", Article.Comment(hub))
 		}
-		auth.POST("/ws/article/comment", Article.Comment(hub))
+		auth.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
 	}
 	router.GET("/ping", func(c *gin.Context) {
