@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"github.com/teablog/tea/internal/helper"
-	"github.com/teablog/tea/internal/module/account"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/module/account"
 	"net/http"
 )
 
@@ -51,4 +51,3 @@ func (*_oauth) Google(ctx *gin.Context) {
 	helper.Success(ctx, user)
 	return
 }
-
