@@ -15,6 +15,7 @@ func Run(dir string) {
 	if err != nil {
 		logger.Fatalf("加载配置文件: %s", err)
 	}
+	// todo 改为软删除，避免google已经收录的文章找不到，只是列表不在显示
 	if err = Indices.Article.Delete(consts.IndicesArticleCost); err != nil {
 		logger.Error(err)
 	}
