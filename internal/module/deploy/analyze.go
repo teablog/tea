@@ -3,15 +3,17 @@ package deploy
 import (
 	"bufio"
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/article"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
@@ -40,6 +42,7 @@ type Article struct {
 	FilePath                 string    `yaml:"-" json:"-"`
 	WechatSubscriptionQrcode string    `yaml:"WechatSubscriptionQrcode" json:"wechat_subscription_qrcode"`
 	WechatSubscription       string    `yaml:"wechat_subscription" json:"wechat_subscription"`
+	Md5                      string    `yaml:"-" json:"md5"`
 }
 
 func NewArticle(file string) (*Article, error) {
@@ -47,13 +50,18 @@ func NewArticle(file string) (*Article, error) {
 		t   Article
 		err error
 	)
-	r, err := os.Open(file)
+	// 打开文件描述符
+	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 	t.FilePath = file
+	// 读取头部配置
 	conf := bytes.Buffer{}
-	reader := bufio.NewReader(r)
+	reader := bufio.NewReader(f)
+	md := md5.New()
+	md.Write([]byte(t.FilePath))
 	b, err := reader.ReadBytes('\n')
 	// 解析文件配置
 	if string(b[:len(b)-1]) == "---" {
@@ -66,25 +74,26 @@ func NewArticle(file string) (*Article, error) {
 				break
 			}
 			conf.Write(b)
+			md.Write(b)
 		}
-		//logger.Debugf("文章配置string: %s\n", conf.String())
 		if err = yaml.Unmarshal(conf.Bytes(), &t); err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "file: %s header:\n%s", file, conf.String())
 		}
-		//logger.Debugf("文章配置struct：%v", t)
 	}
 	var content = bytes.Buffer{}
 	for {
-		res, err := reader.ReadBytes('\n')
+		b, err := reader.ReadBytes('\n')
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return nil, err
 		}
-		content.Write(res)
+		content.Write(b)
+		md.Write(b)
 	}
 	t.Content = content.String()
+	t.Md5 = hex.EncodeToString(md.Sum(nil))
 	return &t, nil
 }
 
@@ -244,14 +253,15 @@ func (a *Article) Complete(c *Conf, topicTitle string, fileName string) {
 }
 
 // 存储文章
-func (a *Article) Storage(index string) (err error) {
+func (a *Article) Save() (err error) {
 	var buf bytes.Buffer
 	if err = json.NewEncoder(&buf).Encode(a); err != nil {
 		return
 	}
 	res, err := db.ES.Index(
-		index,
+		consts.IndicesArticleCost,
 		strings.NewReader(buf.String()),
+		db.ES.Index.WithDocumentID(a.ID),
 	)
 	if err != nil {
 		return
@@ -261,6 +271,31 @@ func (a *Article) Storage(index string) (err error) {
 		resp, _ := ioutil.ReadAll(res.Body)
 		return errors.New(string(resp))
 	}
-	logger.Debugf("storage: 《%s》存储成功", a.Title)
+	logger.Infof("storage: 《%s》存储成功", a.Title)
 	return
+}
+
+func (a *Article) Update(id string) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(a); err != nil {
+		return err
+	}
+	doc := fmt.Sprintf(`{"doc": %s}`, buf.String())
+	resp, err := db.ES.Update(
+		consts.IndicesArticleCost,
+		id,
+		strings.NewReader(doc),
+	)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.IsError() {
+		res, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrapf(err, "es response body read err")
+		}
+		return errors.Errorf("es response err: %s", res)
+	}
+	return nil
 }

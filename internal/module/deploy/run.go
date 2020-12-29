@@ -5,40 +5,52 @@ import (
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/module/article"
 	"path"
 	"strings"
 	"sync"
 )
 
 func Run(dir string) {
+	//logger.SetLevel("info")
 	conf, err := LoadConfig(dir)
 	if err != nil {
-		logger.Fatalf("加载配置文件: %s", err)
+		logger.Fatalf("load config file err: %s", err)
 	}
-	// todo 改为软删除，避免google已经收录的文章找不到，只是列表不在显示
-	if err = Indices.Article.Delete(consts.IndicesArticleCost); err != nil {
-		logger.Error(err)
+	md5cache, err := article.Post.AllMd5()
+	if err != nil {
+		logger.Fatalf("all articles md5 load err: %s", err.Error())
 	}
-	// 清理一下文章
-	if err = Indices.Article.Create(consts.IndicesArticleCost); err != nil {
-		logger.Fatalf("初始化: %s", err)
+	if err = Indices.Article.Init(consts.IndicesArticleCost); err != nil {
+		logger.Fatalf("article index init err: %s", err)
 	}
 	// 公众号二维码上传
 	if err = conf.UploadQrcode(conf.Root); err != nil {
-		logger.Fatalf(": %s", err)
+		logger.Fatalf("upload qr code err: %s", err)
 	}
 	wg := sync.WaitGroup{}
+	// 加锁，限制并发数量
+	queue := make(chan struct{}, 10)
+	defer close(queue)
 	for topicTitle, articles := range conf.Topics {
 		for _, file := range articles {
 			wg.Add(1)
-			logger.Debugf("analyze file: %s", file)
+			queue <- struct{}{}
 			go func(topicTitle, file string) {
 				defer wg.Done()
+				defer func() {
+					<-queue
+				}()
+				logger.Infof("start load file: %s", file)
 				// 文件路径
 				filePath := path.Join(dir, strings.ToLower(topicTitle), file)
 				a, err := NewArticle(filePath)
 				if err != nil {
-					logger.Errorf("文章初始化失败: %s", err)
+					logger.Errorf("file load err: %s", err)
+					return
+				}
+				// 文件没有变动
+				if _, ok := md5cache[a.Md5]; ok {
 					return
 				}
 				// 数据完善
@@ -48,14 +60,15 @@ func Run(dir string) {
 					logger.Errorf("upload image: %s", err)
 					return
 				}
-				if err := a.Storage(consts.IndicesArticleCost); err != nil {
-					logger.Errorf("elasticsearch 存储失败: %s", err)
+				if err := a.Save(); err != nil {
+					logger.Errorf("elasticsearch save err: %s", err)
 					return
 				}
 			}(topicTitle, file)
 		}
 	}
 	wg.Wait()
+	logger.Debugf("--------- start convert webp ---------------")
 	// 生成webp图片
 	if err := helper.Image.Convert(path.Join(config.GetKey("path::storage_dir").String(), "images/blog", conf.Key)); err != nil {
 		logger.Error(err)

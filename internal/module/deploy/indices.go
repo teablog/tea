@@ -20,7 +20,7 @@ type _Indices struct {
 	Article _article
 }
 
-func (*_article) Create(index string) error {
+func (*_article) Init(index string) error {
 	res, err := db.ES.Indices.Exists(
 		[]string{index},
 	)
@@ -28,6 +28,7 @@ func (*_article) Create(index string) error {
 		return err
 	}
 	defer res.Body.Close()
+	// 文章：不存在再创建
 	if res.StatusCode == 404 {
 		res2, err := db.ES.Indices.Create(
 			index,
@@ -69,7 +70,7 @@ func (*_article) Delete(index string) error {
 
 func (*_article) ReindexAndDeleteSource(source, dest string) (err error) {
 	logger.Debugf("create indices(%s) mapping", dest)
-	if err = Indices.Article.Create(dest); err != nil {
+	if err = Indices.Article.Init(dest); err != nil {
 		return
 	}
 	query := fmt.Sprintf(`{

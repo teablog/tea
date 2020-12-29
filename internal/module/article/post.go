@@ -2,13 +2,13 @@ package article
 
 import (
 	"bytes"
-	"github.com/teablog/tea/internal/consts"
-	"github.com/teablog/tea/internal/db"
-	"github.com/teablog/tea/internal/helper"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/helper"
 	"io/ioutil"
 	"path"
 	"regexp"
@@ -137,6 +137,37 @@ func (*_post) View(ctx *gin.Context, id string) (data interface{}, err error) {
 	return
 }
 
+func (*_post) AllMd5() (map[string]struct{}, error) {
+	query := `{ "_source": ["md5", "id"], "size": 10000 }`
+	resp, err := db.ES.Search(
+		db.ES.Search.WithIndex(consts.IndicesArticleCost),
+		db.ES.Search.WithBody(strings.NewReader(query)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var eslist db.ESListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&eslist); err != nil {
+		return nil, err
+	}
+	type source struct {
+		Source struct {
+			Md5 string `json:"md5"`
+		} `json:"_source"`
+	}
+	hits := make([]source, 0)
+	if err := json.Unmarshal(eslist.Hits.Hits, &hits); err != nil {
+		return nil, err
+	}
+	m := make(map[string]struct{})
+	for _, v := range hits {
+		m[v.Source.Md5] = struct{}{}
+	}
+	return m, nil
+}
+
+// ConvertWebp chrome 和 Android 使用webp响应, 其他设别正常返回数据
 func (*_post) ConvertWebp(ctx *gin.Context, image string) string {
 	ext := path.Ext(image)
 	if helper.Image.WebPSupportExt(ext) {
@@ -148,6 +179,7 @@ func (*_post) ConvertWebp(ctx *gin.Context, image string) string {
 	return image
 }
 
+// ConvertContentWebP 图片生成webp
 func (c *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
 	matched, err := regexp.MatchString(consts.MarkDownImageRegex, content)
 	if err != nil {
