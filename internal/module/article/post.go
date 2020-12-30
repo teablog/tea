@@ -42,6 +42,8 @@ type Article struct {
 	FilePath                 string    `json:"-"`
 	WechatSubscriptionQrcode string    `json:"wechat_subscription_qrcode"`
 	WechatSubscription       string    `json:"wechat_subscription"`
+	Md5                      string    `json:"md5"`
+	Pv                       string    `json:"pv"`
 }
 
 func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
@@ -137,7 +139,7 @@ func (*_post) View(ctx *gin.Context, id string) (data interface{}, err error) {
 	return
 }
 
-func (*_post) AllMd5() (map[string]struct{}, error) {
+func (*_post) All() (ASlice, error) {
 	query := `{ "_source": ["md5", "id"], "size": 10000 }`
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
@@ -152,17 +154,15 @@ func (*_post) AllMd5() (map[string]struct{}, error) {
 		return nil, err
 	}
 	type source struct {
-		Source struct {
-			Md5 string `json:"md5"`
-		} `json:"_source"`
+		Source *Article `json:"_source"`
 	}
-	hits := make([]source, 0)
+	hits := make([]*source, 0)
 	if err := json.Unmarshal(eslist.Hits.Hits, &hits); err != nil {
 		return nil, err
 	}
-	m := make(map[string]struct{})
+	m := make(ASlice, 0)
 	for _, v := range hits {
-		m[v.Source.Md5] = struct{}{}
+		m = append(m, v.Source)
 	}
 	return m, nil
 }
@@ -203,4 +203,22 @@ func (c *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
 // 拼接文章id md5(user.key-topic-文件名称)
 func (c *_post) GenerateId(topic, key, filename string) string {
 	return helper.Md532([]byte(fmt.Sprintf("%s-%s-%s", topic, key, filename)))
+}
+
+type ASlice []*Article
+
+func (rows ASlice) MapMd5() map[string]struct{} {
+	m := make(map[string]struct{}, len(rows))
+	for _, v := range rows {
+		m[v.Md5] = struct{}{}
+	}
+	return m
+}
+
+func (rows ASlice) MapId() map[string]struct{} {
+	m := make(map[string]struct{}, len(rows))
+	for _, v := range rows {
+		m[v.Id] = struct{}{}
+	}
+	return m
 }

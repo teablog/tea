@@ -253,7 +253,7 @@ func (a *Article) Complete(c *Conf, topicTitle string, fileName string) {
 }
 
 // 存储文章
-func (a *Article) Save() (err error) {
+func (a *Article) Create() (err error) {
 	var buf bytes.Buffer
 	if err = json.NewEncoder(&buf).Encode(a); err != nil {
 		return
@@ -275,7 +275,7 @@ func (a *Article) Save() (err error) {
 	return
 }
 
-func (a *Article) Update(id string) error {
+func (a *Article) Update() error {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(a); err != nil {
 		return err
@@ -283,7 +283,7 @@ func (a *Article) Update(id string) error {
 	doc := fmt.Sprintf(`{"doc": %s}`, buf.String())
 	resp, err := db.ES.Update(
 		consts.IndicesArticleCost,
-		id,
+		a.ID,
 		strings.NewReader(doc),
 	)
 	if err != nil {

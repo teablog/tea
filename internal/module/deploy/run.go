@@ -17,10 +17,14 @@ func Run(dir string) {
 	if err != nil {
 		logger.Fatalf("load config file err: %s", err)
 	}
-	md5cache, err := article.Post.AllMd5()
+	all, err := article.Post.All()
 	if err != nil {
 		logger.Fatalf("all articles md5 load err: %s", err.Error())
 	}
+	// md5
+	md5Cache := all.MapMd5()
+	idCache := all.MapId()
+
 	if err = Indices.Article.Init(consts.IndicesArticleCost); err != nil {
 		logger.Fatalf("article index init err: %s", err)
 	}
@@ -50,7 +54,7 @@ func Run(dir string) {
 					return
 				}
 				// 文件没有变动
-				if _, ok := md5cache[a.Md5]; ok {
+				if _, ok := md5Cache[a.Md5]; ok {
 					return
 				}
 				// 数据完善
@@ -60,9 +64,17 @@ func Run(dir string) {
 					logger.Errorf("upload image: %s", err)
 					return
 				}
-				if err := a.Save(); err != nil {
-					logger.Errorf("elasticsearch save err: %s", err)
-					return
+				// 新文章
+				if _, ok := idCache[a.ID]; !ok {
+					if err := a.Create(); err != nil {
+						logger.Errorf("elasticsearch save err: %s", err)
+						return
+					}
+				} else {
+					if err := a.Update(); err != nil {
+						logger.Errorf("elasticsearch save err: %s", err)
+						return
+					}
 				}
 			}(topicTitle, file)
 		}
