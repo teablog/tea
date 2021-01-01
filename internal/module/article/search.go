@@ -90,7 +90,7 @@ func (*_search) List(q string) (total int64, data []interface{}, err error) {
 	return
 }
 
-func (s *_search) All(source []string) *[]Article {
+func (s *_search) All(source []string) []Article {
 	type count struct {
 		Count int `json:"count"`
 	}
@@ -136,5 +136,5 @@ func (s *_search) All(source []string) *[]Article {
 	for _, v := range resp.Hits.Hits {
 		articles = append(articles, v.Article)
 	}
-	return &articles
+	return articles
 }

@@ -1,12 +1,16 @@
 package deploy
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/article"
+	"net/http"
+	"net/url"
 	"path"
 	"strings"
 	"sync"
@@ -121,7 +125,7 @@ func Run(dir string) {
 	}
 	wg.Wait()
 	close(chanA)
-	// 等chanA goroutine推出以后在执行, 防止 concurrent map read and map write
+	// 等chanA goroutine退出以后在执行, 防止 concurrent map read and map write
 	time.Sleep(10 * time.Millisecond)
 	logger.Infof("----------------- errors --------------------")
 	for _, v := range errs {
@@ -135,12 +139,12 @@ func Run(dir string) {
 	toDel := make([]string, 0)
 	for _, v := range all {
 		if _, ok := newCache[v.Id]; !ok {
-			logger.Infof("Delete: 《%s》pv %d id %s", v.Title, v.Pv, v.Id)
+			logger.Infof("delete: 《%s》pv %d id %s", v.Title, v.Pv, v.Id)
 			toDel = append(toDel, v.Id)
 		}
 	}
 	if err := article.Post.DeleteByIds(toDel); err != nil {
-		logger.Errorf("[delete] err: %s", err.Error())
+		logger.Errorf("delete err: %s", err.Error())
 	}
 
 	logger.Infof("--------- start convert webp ---------------")
@@ -148,4 +152,53 @@ func Run(dir string) {
 	if err := helper.Image.Convert(path.Join(config.GetKey("path::storage_dir").String(), "images/blog", conf.Key)); err != nil {
 		logger.Error(err)
 	}
+}
+
+func regenSitemap() error {
+	clt := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := clt.Get(config.Global.Host() + "/api/seo/sitemap")
+	if err != nil {
+		return errors.Wrapf(err, "regenerate sitemap err")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("regenerate sitemap failed!")
+	}
+	type r struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	re := new(r)
+	if err := json.NewDecoder(resp.Body).Decode(re); err != nil {
+		return errors.Wrap(err, "json decode response body err")
+	}
+	if re.Code != 0 {
+		return errors.Errorf("regenerate sitemap failed")
+	}
+	return nil
+}
+
+// getSitemapUrl 获取sitemap地址
+func getSitemapUrl() string {
+	return config.Global.Host() + "/sitemap.xml"
+}
+
+// pingGoogleSitemap 向google提交站点地图 https://developers.google.com/search/docs/guides/submit-URLs?hl=zh-Hans
+func pingGoogleSitemap() error {
+	clt := http.Client{
+		Timeout: 5,
+	}
+	sitemapUrl := url.QueryEscape(getSitemapUrl())
+	u := fmt.Sprintf("http://www.google.com/ping?sitemap=%s", sitemapUrl)
+	resp, err := clt.Get(u)
+	if err != nil {
+		return errors.Wrapf(err, "ping google sitemap err")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("ping google sitemap failed")
+	}
+	return nil
 }

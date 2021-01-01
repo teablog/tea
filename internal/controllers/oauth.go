@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/module/account"
 	"net/http"
@@ -18,7 +19,7 @@ func (*_oauth) Github(ctx *gin.Context) {
 		helper.Fail(ctx, errors.Errorf("code参数丢失！"))
 		return
 	}
-	redirectUri := ctx.DefaultQuery("redirect_uri", "https://www.douyacun.com/")
+	redirectUri := ctx.DefaultQuery("redirect_uri", config.Global.Host())
 	github := account.NewGithub()
 	if err := github.Token(code); err != nil {
 		ctx.String(http.StatusForbidden, err.Error())

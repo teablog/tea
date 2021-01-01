@@ -22,7 +22,16 @@ func Success(ctx *gin.Context, data interface{}) {
 
 func Fail(ctx *gin.Context, err error) {
 	resp := Response{
-		Code:    http.StatusBadRequest,
+		Code:    http.StatusInternalServerError,
+		Message: err.Error(),
+		Data:    nil,
+	}
+	ctx.JSON(http.StatusOK, resp)
+}
+
+func FailWithCode(ctx *gin.Context, err error, code int) {
+	resp := Response{
+		Code:    code,
 		Message: err.Error(),
 		Data:    nil,
 	}

@@ -51,13 +51,22 @@ func (*_article) Labels(c *gin.Context) {
 
 func (*_article) View(c *gin.Context) {
 	id := c.Param("id")
-	data, err := article.Post.View(c, id)
+	ok, at, err := article.Post.Get(id)
 	if err != nil {
 		logger.Errorf("%s", err)
-		helper.Fail(c, errors.New("服务器出错了"))
+		helper.Fail(c, errors.New("服务器出错了～"))
+		return
+	} else if !ok {
+		helper.FailWithCode(c, errors.New("阿弥陀佛，文章在西天取经的路上丢了～"), http.StatusNotFound)
 		return
 	}
-	helper.Success(c, gin.H{"data": data})
+	// 封面
+	at.Cover = article.Post.ConvertWebp(c, at.Cover)
+	// 内容图片
+	at.Content = article.Post.ConvertContentWebP(c, at.Content)
+	// 微信二维码
+	at.WechatSubscriptionQrcode = article.Post.ConvertWebp(c, at.WechatSubscriptionQrcode)
+	helper.Success(c, at)
 }
 
 func (*_article) Search(c *gin.Context) {

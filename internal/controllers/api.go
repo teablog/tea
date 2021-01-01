@@ -17,7 +17,7 @@ func Init(engine *gin.Engine) {
 func NewRouter(router *gin.Engine) {
 	hub := chat.NewHub()
 	go hub.Run()
-	storageDir := config.GetKey("path::storage_dir").String()
+	storageDir := config.Path.StorageDir()
 	api := router.Group("/api")
 	{
 		// 文章
@@ -54,6 +54,7 @@ func NewRouter(router *gin.Engine) {
 		}
 		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
+		api.GET("/seo/url", Seo.Urls)
 	}
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
@@ -63,5 +64,6 @@ func NewRouter(router *gin.Engine) {
 	router.Static("/ext_dict", path.Join(storageDir, "ext_dict"))
 	router.StaticFile("/sitemap.xml", path.Join(storageDir, "seo", "sitemap.xml"))
 	router.StaticFile("/robots.txt", path.Join(storageDir, "seo", "robots.txt"))
+	router.StaticFile("/url.txt", path.Join(storageDir, "seo", "url.txt"))
 	router.StaticFile("/favicon.ico", path.Join(storageDir, "favicon.ico"))
 }

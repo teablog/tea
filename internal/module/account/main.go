@@ -2,14 +2,14 @@ package account
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
-	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -280,11 +280,11 @@ func (a *Account) SetCookie(ctx *gin.Context) {
 	if err != nil {
 		panic(errors.Wrap(err, "set cookie json encode failed"))
 	}
-	ctx.SetCookie(consts.CookieName, string(cookie), 604800, "/", ".www.douyacun.com", false, false)
+	ctx.SetCookie(consts.CookieName, string(cookie), 604800, "/", "."+config.Global.Domain(), false, false)
 }
 
 func (a *Account) ExpireCookie(ctx *gin.Context) {
-	ctx.SetCookie(consts.CookieName, "", -1, "/", ".www.douyacun.com", false, false)
+	ctx.SetCookie(consts.CookieName, "", -1, "/", "." + config.Global.Domain(), false, false)
 }
 
 func (c *Cookie) VerifyCookie() bool {

@@ -11,6 +11,7 @@ import (
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"io/ioutil"
+	"net/http"
 	"path"
 	"regexp"
 	"strings"
@@ -95,49 +96,36 @@ func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
 	return total, data, nil
 }
 
-func (*_post) View(ctx *gin.Context, id string) (data interface{}, err error) {
-	var (
-		buf bytes.Buffer
-		r   map[string]interface{}
+// Get 根据Id获取文章
+func (*_post) Get(id string) (bool, *Article, error) {
+	resp, err := db.ES.Get(
+		consts.IndicesArticleCost,
+		id,
 	)
-	query := map[string]interface{}{
-		"query": map[string]interface{}{
-			"term": map[string]interface{}{
-				"id.keyword": map[string]string{
-					"value": id,
-				},
-			},
-		},
-	}
-	if err = json.NewEncoder(&buf).Encode(query); err != nil {
-		panic(errors.Wrap(err, "json encode错误"))
-	}
-	res, err := db.ES.Search(
-		db.ES.Search.WithIndex(consts.IndicesArticleCost),
-		db.ES.Search.WithBody(&buf),
-	)
-	defer res.Body.Close()
 	if err != nil {
-		panic(errors.Wrap(err, "es请求错误"))
+		return false, nil, errors.Wrapf(err, "get article %s err", id)
 	}
-	if res.IsError() {
-		resp, _ := ioutil.ReadAll(res.Body)
-		panic(errors.New(string(resp)))
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, nil, errors.Wrapf(err, "get article %s read response body err", id)
 	}
-	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
-		panic(errors.Wrap(err, "json encode错误"))
+	if resp.IsError() {
+		// 文章不存在
+		if resp.StatusCode == http.StatusNotFound {
+			return false, nil, nil
+		}
+		return false, nil, errors.Errorf("get article es response %d %s", resp.StatusCode, string(body))
 	}
-
-	data = r["hits"].(map[string]interface{})["hits"].([]interface{})[0].(map[string]interface{})["_source"]
-
-	// 封面图片webp
-	data.(map[string]interface{})["cover"] = Post.ConvertWebp(ctx, data.(map[string]interface{})["cover"].(string))
-	// 内容图片webp
-	data.(map[string]interface{})["content"] = Post.ConvertContentWebP(ctx, data.(map[string]interface{})["content"].(string))
-	// 账户二维码webp
-	data.(map[string]interface{})["wechat_subscription_qrcode"] = Post.ConvertWebp(ctx, data.(map[string]interface{})["wechat_subscription_qrcode"].(string))
-
-	return
+	var r db.ESItemResponse
+	if err := json.Unmarshal(body, &r); err != nil {
+		return false, nil, errors.Wrapf(err, "get article %s json decode err", id)
+	}
+	a := new(Article)
+	if err := json.Unmarshal(r.Source, a); err != nil {
+		return false, nil, errors.Wrapf(err, "get article %s json decode err", id)
+	}
+	return true, a, nil
 }
 
 func (*_post) All() (ASlice, error) {
