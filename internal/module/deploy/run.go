@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/helper"
@@ -14,6 +15,8 @@ import (
 
 func Run(dir string) {
 	//logger.SetLevel("info")
+	// todo git先提交，在部署
+
 	conf, err := LoadConfig(dir)
 	if err != nil {
 		logger.Fatalf("load config file err: %s", err)
@@ -40,7 +43,10 @@ func Run(dir string) {
 	// chan: 统计当前文章
 	chanA := make(chan string, 2)
 	defer close(concurrentN)
-
+	// error
+	errs := make([]error, 0)
+	chanErr := make(chan error, 2)
+	defer close(chanErr)
 	go func() {
 		for {
 			select {
@@ -49,6 +55,17 @@ func Run(dir string) {
 					return
 				}
 				newCache[id] = struct{}{}
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case err, ok := <-chanErr:
+				if !ok {
+					return
+				}
+				errs = append(errs, err)
 			}
 		}
 	}()
@@ -66,12 +83,13 @@ func Run(dir string) {
 				filePath := path.Join(dir, strings.ToLower(topicTitle), file)
 				a, err := NewArticle(filePath)
 				if err != nil {
-					logger.Errorf("file load err: %s", err)
+					chanErr <- errors.Wrapf(err, "file load")
 					return
 				}
 				// 数据完善
 				if err := a.Complete(conf, topicTitle, file); err != nil {
-					logger.Errorf("《%s》 complete %s", a.Title, err.Error())
+					chanErr <- errors.Wrapf(err, "《%s》 complete %s", a.Title, err.Error())
+					return
 				}
 				chanA <- a.ID
 				// 文件没有变动
@@ -80,18 +98,18 @@ func Run(dir string) {
 				}
 				// 上传图片
 				if err = a.UploadImage(dir, a.Topic); err != nil {
-					logger.Errorf("upload image: %s", err)
+					chanErr <- errors.Wrapf(err, "upload image: %s", err)
 					return
 				}
 				// 新文章
 				if _, ok := idCache[a.ID]; !ok {
 					if err := a.Create(); err != nil {
-						logger.Errorf("elasticsearch save err: %s", err)
+						chanErr <- errors.Wrapf(err, "elasticsearch save err: %s", err)
 						return
 					}
 				} else {
 					if err := a.Update(); err != nil {
-						logger.Errorf("elasticsearch save err: %s", err)
+						chanErr <- errors.Wrapf(err, "elasticsearch save err: %s", err)
 						return
 					}
 				}
@@ -102,6 +120,14 @@ func Run(dir string) {
 	close(chanA)
 	// 等chanA goroutine推出以后在执行, 防止 concurrent map read and map write
 	time.Sleep(10 * time.Millisecond)
+	logger.Infof("----------------- errors --------------------")
+	for _, v := range errs {
+		logger.Errorf("%s", v.Error())
+	}
+	if len(errs) > 0 {
+		logger.Error("please solve the errors")
+		return
+	}
 	logger.Infof("----------------- delete article -----------")
 	toDel := make([]string, 0)
 	for _, v := range all {
