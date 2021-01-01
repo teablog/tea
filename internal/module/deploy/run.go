@@ -15,8 +15,11 @@ import (
 
 func Run(dir string) {
 	//logger.SetLevel("info")
-	// todo git先提交，在部署
-
+	if ok, err := helper.Git.HasCommit(dir); err != nil {
+		logger.Fatalf("check git commit dir: %s err: %s", dir, err.Error())
+	} else if !ok {
+		logger.Fatalf("please git commit the changes, dir: %s", dir)
+	}
 	conf, err := LoadConfig(dir)
 	if err != nil {
 		logger.Fatalf("load config file err: %s", err)
