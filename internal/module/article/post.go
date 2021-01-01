@@ -63,6 +63,7 @@ func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
 				"order": "desc",
 			},
 		},
+		"query":   map[string]interface{}{"term": map[string]interface{}{"status": consts.StatusOn}},
 		"_source": []string{"author", "title", "description", "topic", "id", "cover", "date", "last_edit_time"},
 	}
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
