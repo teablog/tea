@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/consts"
@@ -43,7 +44,7 @@ type Article struct {
 	WechatSubscriptionQrcode string    `json:"wechat_subscription_qrcode"`
 	WechatSubscription       string    `json:"wechat_subscription"`
 	Md5                      string    `json:"md5"`
-	Pv                       string    `json:"pv"`
+	Pv                       int       `json:"pv"`
 }
 
 func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
@@ -140,7 +141,7 @@ func (*_post) View(ctx *gin.Context, id string) (data interface{}, err error) {
 }
 
 func (*_post) All() (ASlice, error) {
-	query := `{ "_source": ["md5", "id"], "size": 10000 }`
+	query := `{ "_source": ["md5", "id", "title", "pv"], "size": 10000 }`
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
 		db.ES.Search.WithBody(strings.NewReader(query)),
@@ -165,6 +166,51 @@ func (*_post) All() (ASlice, error) {
 		m = append(m, v.Source)
 	}
 	return m, nil
+}
+
+func (*_post) DeleteByIds(ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	query := fmt.Sprintf(`{
+  "query": {
+    "terms": {
+      "id": ["%s"]
+    }
+  },
+  "script": {
+    "source": "ctx._source.status=3",
+    "lang": "painless"
+  }
+}`, strings.Join(ids, `","`))
+	resp, err := db.ES.UpdateByQuery(
+		[]string{consts.IndicesArticleCost},
+		func(request *esapi.UpdateByQueryRequest) {
+			request.Body = strings.NewReader(query)
+		},
+	)
+	if err != nil {
+		return errors.Wrapf(err, "[es] delete by ids err")
+	}
+	defer resp.Body.Close()
+	bt, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrapf(err, "[es] delete by ids response, read body err")
+	}
+	if resp.IsError() {
+		return errors.Errorf("[es] delete by ids body: %s\tresponse %d, %s", query, resp.StatusCode, string(bt))
+	}
+	type UpdateResp struct {
+		Total int
+	}
+	ur := &UpdateResp{}
+	if err := json.Unmarshal(bt, ur); err != nil {
+		return errors.Wrapf(err, "[es] update_by_query json decode err")
+	}
+	if ur.Total != len(ids) {
+		return errors.Errorf("[es] delete by ids total not equal: %d, %d", ur.Total, len(ids))
+	}
+	return nil
 }
 
 // ConvertWebp chrome 和 Android 使用webp响应, 其他设别正常返回数据

@@ -20,7 +20,7 @@ func (*_git) LogFileLastCommitTime(filePath string) (t time.Time, err error) {
 	}
 	dir := path.Dir(filePath)
 	file := path.Base(filePath)
-	command := fmt.Sprintf("cd %s && git log --format='%%ct' -- %s | awk 'NR==1'", dir, file)
+	command := fmt.Sprintf(`cd %s && git log --format='%%ct' -- %s | awk 'NR==1'`, dir, file)
 	out, err := exec.Command("bash", "-c", command).Output()
 	if err != nil {
 		return
@@ -39,7 +39,7 @@ func (*_git) LogFileFirstCommitTime(filePath string) (t time.Time, err error) {
 	}
 	dir := path.Dir(filePath)
 	file := path.Base(filePath)
-	command := fmt.Sprintf("cd %s && git log --reverse --format='%%ct' -- %s |awk 'NR == 1'", dir, file)
+	command := fmt.Sprintf(`cd %s && git log --reverse --format="%%ct" -- %s |awk 'NR == 1'`, dir, file)
 	out, err := exec.Command("bash", "-c", command).Output()
 	if err != nil {
 		return

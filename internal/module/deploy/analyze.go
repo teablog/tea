@@ -25,24 +25,27 @@ import (
 )
 
 type Article struct {
-	Title                    string    `yaml:"Title" json:"title"`
-	Keywords                 string    `yaml:"Keywords" json:"keywords"`
-	Label                    string    `yaml:"Label" json:"label"`
-	Cover                    string    `yaml:"Cover" json:"cover"`
-	Description              string    `yaml:"Description" json:"description"`
-	Author                   string    `yaml:"Author" json:"author"`
-	Date                     time.Time `yaml:"Date" json:"date"`
-	LastEditTime             time.Time `yaml:"LastEditTime" json:"last_edit_time"`
-	Content                  string    `yaml:"Content" json:"content"`
-	Email                    string    `yaml:"Email" json:"email"`
-	Github                   string    `yaml:"Github" json:"github"`
-	Key                      string    `yaml:"Key" json:"key"`
-	ID                       string    `yaml:"-" json:"id"`
-	Topic                    string    `yaml:"-" json:"topic"`
-	FilePath                 string    `yaml:"-" json:"-"`
-	WechatSubscriptionQrcode string    `yaml:"WechatSubscriptionQrcode" json:"wechat_subscription_qrcode"`
-	WechatSubscription       string    `yaml:"wechat_subscription" json:"wechat_subscription"`
-	Md5                      string    `yaml:"-" json:"md5"`
+	Title                    string        `yaml:"Title" json:"title"`
+	Keywords                 string        `yaml:"Keywords" json:"keywords"`
+	Label                    string        `yaml:"Label" json:"label"`
+	Cover                    string        `yaml:"Cover" json:"cover"`
+	Description              string        `yaml:"Description" json:"description"`
+	Author                   string        `yaml:"Author" json:"author"`
+	Dt                       string        `yaml:"Date" json:"dt"`
+	Ledt                     string        `yamll:"LastEditTime" json:"-"`
+	Date                     time.Time     `yaml:"-" json:"date"`
+	LastEditTime             time.Time     `yaml:"LastEditTime" json:"last_edit_time"`
+	Content                  string        `yaml:"Content" json:"content"`
+	Email                    string        `yaml:"Email" json:"email"`
+	Github                   string        `yaml:"Github" json:"github"`
+	Key                      string        `yaml:"Key" json:"key"`
+	ID                       string        `yaml:"-" json:"id"`
+	Topic                    string        `yaml:"-" json:"topic"`
+	FilePath                 string        `yaml:"-" json:"-"`
+	WechatSubscriptionQrcode string        `yaml:"WechatSubscriptionQrcode" json:"wechat_subscription_qrcode"`
+	WechatSubscription       string        `yaml:"wechat_subscription" json:"wechat_subscription"`
+	Md5                      string        `yaml:"-" json:"md5"`
+	Status                   consts.Status `yaml:"-" json:"status"`
 }
 
 func NewArticle(file string) (*Article, error) {
@@ -209,7 +212,7 @@ func (a *Article) UploadImage(bookDir string, topic string) (err error) {
 }
 
 // 完善信息文章
-func (a *Article) Complete(c *Conf, topicTitle string, fileName string) {
+func (a *Article) Complete(c *Conf, topicTitle string, fileName string) error {
 	if strings.TrimSpace(a.Author) == "" {
 		a.Author = c.Author
 	}
@@ -223,33 +226,25 @@ func (a *Article) Complete(c *Conf, topicTitle string, fileName string) {
 	if strings.TrimSpace(a.Title) == "" {
 		a.Title = path.Base(a.FilePath)
 	}
-	var cst, _ = time.LoadLocation("Asia/Shanghai")
+	var err error
 	// 通过git版本获取最后更新时间
-	lastEditTime, _ := helper.Git.LogFileLastCommitTime(a.FilePath)
-	if a.LastEditTime.Before(lastEditTime) {
-		a.LastEditTime = lastEditTime
+	if a.LastEditTime, err = helper.Git.LogFileLastCommitTime(a.FilePath); err != nil {
+		return err
 	}
-	z, _ := a.LastEditTime.Zone()
-	if z != cst.String() {
-		a.LastEditTime = a.LastEditTime.Add(-time.Hour * 8)
-	}
-	logger.Debugf("《%s》: 更新时间: %s, 时区: %s", a.Title, a.LastEditTime, z)
 	// 通过git版本获取首次创建时间
-	firstCreateTime, _ := helper.Git.LogFileFirstCommitTime(a.FilePath)
-	if a.Date.After(firstCreateTime) {
-		a.Date = firstCreateTime
+	if a.Date, err = helper.Git.LogFileFirstCommitTime(a.FilePath); err != nil {
+		return err
 	}
-	z, _ = a.Date.Zone()
-	if z != cst.String() {
-		a.Date = a.Date.Add(-time.Hour * 8)
-	}
-	logger.Debugf("《%s》: 创建时间: %s, 时区: %s", a.Title, a.LastEditTime, z)
+	z, _ := a.Date.Zone()
+	logger.Debugf("《%s》:创建时间 %s 更新时间: %s, 时区: %s", a.Title, a.Date, a.LastEditTime, z)
 	// 每篇文章冗余一下二维码
 	a.WechatSubscription = c.WechatSubscription
 	a.WechatSubscriptionQrcode = c.WechatSubscriptionQrcode
 	a.Topic = strings.ToLower(topicTitle)
 	a.Key = c.Key
 	a.ID = article.Post.GenerateId(a.Topic, a.Key, fileName)
+	a.Status = consts.StatusOn
+	return nil
 }
 
 // 存储文章

@@ -96,6 +96,12 @@ const (
       "md5": {
         "type": "keyword",
         "index": false
+      },
+      "pv": {
+        "type": "integer"
+      },
+      "status": {
+        "type": "integer"
       }
     }
   }
