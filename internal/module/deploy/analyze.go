@@ -31,7 +31,7 @@ type Article struct {
 	Cover                    string        `yaml:"Cover" json:"cover"`
 	Description              string        `yaml:"Description" json:"description"`
 	Author                   string        `yaml:"Author" json:"author"`
-	Dt                       string        `yaml:"Date" json:"dt"`
+	Dt                       string        `yaml:"Date" json:"-"`
 	Ledt                     string        `yamll:"LastEditTime" json:"-"`
 	Date                     time.Time     `yaml:"-" json:"date"`
 	LastEditTime             time.Time     `yaml:"LastEditTime" json:"last_edit_time"`

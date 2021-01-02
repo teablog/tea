@@ -1,6 +1,8 @@
 package deploy
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
@@ -18,7 +20,7 @@ import (
 )
 
 func Run(dir string) {
-	//logger.SetLevel("info")
+	logger.SetLevel("info")
 	if ok, err := helper.Git.HasCommit(dir); err != nil {
 		logger.Fatalf("check git commit dir: %s err: %s", dir, err.Error())
 	} else if !ok {
@@ -151,12 +153,30 @@ func Run(dir string) {
 	// 生成webp图片
 	if err := helper.Image.Convert(path.Join(config.GetKey("path::storage_dir").String(), "images/blog", conf.Key)); err != nil {
 		logger.Error(err)
+		return
+	}
+	logger.Infof("---------------- ping seo -----------------------")
+	if err := regenSitemap(); err != nil {
+		logger.Error(err)
+	} else {
+		if err := pingGoogleSitemap(); err != nil {
+			logger.Error(err)
+		}
+	}
+	if err := pingBaidu(); err != nil {
+		logger.Error(err)
 	}
 }
 
 func regenSitemap() error {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
 	clt := http.Client{
-		Timeout: 5 * time.Second,
+		Timeout:   5 * time.Second,
+		Transport: tr,
 	}
 	resp, err := clt.Get(config.Global.Host() + "/api/seo/sitemap")
 	if err != nil {
@@ -187,8 +207,13 @@ func getSitemapUrl() string {
 
 // pingGoogleSitemap 向google提交站点地图 https://developers.google.com/search/docs/guides/submit-URLs?hl=zh-Hans
 func pingGoogleSitemap() error {
+	proxy, _ := url.Parse(config.Proxy.GetLocalEndpoint())
 	clt := http.Client{
-		Timeout: 5,
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			Proxy:           http.ProxyURL(proxy),
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
 	}
 	sitemapUrl := url.QueryEscape(getSitemapUrl())
 	u := fmt.Sprintf("http://www.google.com/ping?sitemap=%s", sitemapUrl)
@@ -200,5 +225,42 @@ func pingGoogleSitemap() error {
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("ping google sitemap failed")
 	}
+	logger.Info("ping google sitemap success")
 	return nil
+}
+
+func pingBaidu() error {
+	clt := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	articles := article.Search.All([]string{"id", "last_edit_time"})
+	if len(articles) < 0 {
+		return errors.New("no articles")
+	}
+	buf := bytes.NewBuffer(nil)
+	for _, v := range articles {
+		u := fmt.Sprintf("%s/article/%s", config.Global.Host(), v.Id)
+		buf.WriteString(u)
+		buf.WriteString("\n")
+	}
+	u := "http://data.zz.baidu.com/urls?site=https://www.douyacun.com&token=mLTCWuzMZLOHBTYC"
+	resp, err := clt.Post(u, "text/plain", buf)
+	if err != nil {
+		return errors.Wrapf(err, "ping baidu urls err")
+	}
+	defer resp.Body.Close()
+	type r struct {
+		Remain  int `json:"remain"`
+		Success int `json:"success"`
+	}
+	res := new(r)
+	if err := json.NewDecoder(resp.Body).Decode(res); err != nil {
+		return errors.Wrapf(err, "ping baidu urls err")
+	}
+	if res.Success > 0 {
+		logger.Infof("ping baidu url success %d remain %d", res.Success, res.Remain)
+		return nil
+	} else {
+		return errors.New("ping baidu urls success 0")
+	}
 }

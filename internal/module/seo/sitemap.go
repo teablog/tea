@@ -1,12 +1,12 @@
 package seo
 
 import (
-	"github.com/teablog/tea/internal/config"
-	"github.com/teablog/tea/internal/module/article"
 	"errors"
 	"fmt"
 	"github.com/douyacun/gositemap"
 	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/module/article"
 	"path"
 )
 
@@ -24,7 +24,7 @@ func (s *sitemap) Generate(ctx *gin.Context) error {
 	st.SetCompress(false)
 	st.SetDefaultHost(config.Global.Host())
 	st.SetPublicPath(path.Join(config.Path.StorageDir(), "seo"))
-	host := config.Path.StorageDir() + "/article/%s"
+	host := config.Global.Host() + "/article/%s"
 
 	url := gositemap.NewUrl()
 	url.SetLoc(config.Path.StorageDir())

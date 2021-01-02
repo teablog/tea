@@ -130,7 +130,7 @@ func (*_post) Get(id string) (bool, *Article, error) {
 }
 
 func (*_post) All() (ASlice, error) {
-	query := `{ "_source": ["md5", "id", "title", "pv"], "size": 10000 }`
+	query := fmt.Sprintf(`{ "_source": ["md5", "id", "title", "pv"], "size": 10000, "query": { "term": {"status": %d}} }`, consts.StatusOn)
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
 		db.ES.Search.WithBody(strings.NewReader(query)),

@@ -2,10 +2,10 @@ package article
 
 import (
 	"bytes"
-	"github.com/teablog/tea/internal/consts"
-	"github.com/teablog/tea/internal/db"
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
 	"io/ioutil"
 	"time"
 )
@@ -111,6 +111,7 @@ func (s *_search) All(source []string) []Article {
 	query := map[string]interface{}{
 		"size":    total.Count,
 		"_source": source,
+		"query":   map[string]interface{}{"term": map[string]interface{}{"status": consts.StatusOn}},
 	}
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		panic(err)

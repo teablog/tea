@@ -19,11 +19,3 @@ func (s *_seo) SiteMap(ctx *gin.Context) {
 	return
 }
 
-func (s *_seo) Urls(ctx *gin.Context) {
-	if err := seo.Url.Generate(ctx); err != nil {
-		helper.Fail(ctx, err)
-		return
-	}
-	helper.Success(ctx, "success")
-	return
-}
