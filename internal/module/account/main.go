@@ -280,7 +280,7 @@ func (a *Account) SetCookie(ctx *gin.Context) {
 	if err != nil {
 		panic(errors.Wrap(err, "set cookie json encode failed"))
 	}
-	ctx.SetCookie(consts.CookieName, string(cookie), 604800, "/", "."+config.Global.Domain(), false, false)
+	ctx.SetCookie(consts.CookieName, string(cookie), 31536000, "/", "."+config.Global.Domain(), false, false)
 }
 
 func (a *Account) ExpireCookie(ctx *gin.Context) {
