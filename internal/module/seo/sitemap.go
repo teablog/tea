@@ -27,7 +27,7 @@ func (s *sitemap) Generate(ctx *gin.Context) error {
 	host := config.Global.Host() + "/article/%s"
 
 	url := gositemap.NewUrl()
-	url.SetLoc(config.Path.StorageDir())
+	url.SetLoc(config.Global.Host())
 	url.SetChangefreq(gositemap.Daily)
 	url.SetPriority(1)
 	st.AppendUrl(url)
