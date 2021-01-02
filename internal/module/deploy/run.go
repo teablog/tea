@@ -38,7 +38,7 @@ func Run(dir string) {
 		logger.Fatalf("upload qr code err: %s", err)
 	}
 	// 历史文章
-	all, err := article.Post.All()
+	all, err := article.Post.All([]string{"md5", "id", "title", "pv"})
 	if err != nil {
 		logger.Fatalf("all articles md5 load err: %s", err.Error())
 	}
@@ -233,7 +233,10 @@ func pingBaidu() error {
 	clt := http.Client{
 		Timeout: 5 * time.Second,
 	}
-	articles := article.Search.All([]string{"id", "last_edit_time"})
+	articles, err := article.Post.All([]string{"id", "last_edit_time"})
+	if err != nil {
+		return err
+	}
 	if len(articles) < 0 {
 		return errors.New("no articles")
 	}

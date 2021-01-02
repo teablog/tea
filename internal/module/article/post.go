@@ -129,11 +129,10 @@ func (*_post) Get(id string) (bool, *Article, error) {
 	return true, a, nil
 }
 
-func (*_post) All() (ASlice, error) {
-	query := fmt.Sprintf(`{ "_source": ["md5", "id", "title", "pv"], "size": 10000, "query": { "term": {"status": %d}} }`, consts.StatusOn)
+func (*_post) Search(body string) (ASlice, error) {
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
-		db.ES.Search.WithBody(strings.NewReader(query)),
+		db.ES.Search.WithBody(strings.NewReader(body)),
 	)
 	if err != nil {
 		return nil, err
@@ -155,6 +154,27 @@ func (*_post) All() (ASlice, error) {
 		m = append(m, v.Source)
 	}
 	return m, nil
+}
+
+func (p *_post) All(source []string) (ASlice, error) {
+	body := fmt.Sprintf(`{ "_source": ["%s"], "size": 10000, "query": { "term": {"status": %d}} }`, strings.Join(source, `","`), consts.StatusOn)
+	return p.Search(body)
+}
+
+func (*_post) Flush() error {
+	resp, err := db.ES.Indices.Flush(
+		func(request *esapi.IndicesFlushRequest) {
+			request.Index = []string{consts.IndicesArticleCost}
+		},
+	)
+	if err != nil {
+		return errors.Wrapf(err, "flush %s err", consts.IndicesArticleCost)
+	}
+	defer resp.Body.Close()
+	if resp.IsError() {
+		return errors.Wrapf(err, "flush %s err", consts.IndicesArticleCost)
+	}
+	return nil
 }
 
 func (*_post) DeleteByIds(ids []string) error {
@@ -215,7 +235,7 @@ func (*_post) ConvertWebp(ctx *gin.Context, image string) string {
 }
 
 // ConvertContentWebP 图片生成webp
-func (c *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
+func (p *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
 	matched, err := regexp.MatchString(consts.MarkDownImageRegex, content)
 	if err != nil {
 		return content
@@ -236,7 +256,7 @@ func (c *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
 }
 
 // 拼接文章id md5(user.key-topic-文件名称)
-func (c *_post) GenerateId(topic, key, filename string) string {
+func (p *_post) GenerateId(topic, key, filename string) string {
 	return helper.Md532([]byte(fmt.Sprintf("%s-%s-%s", topic, key, filename)))
 }
 

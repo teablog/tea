@@ -15,7 +15,13 @@ var Sitemap sitemap
 type sitemap struct{}
 
 func (s *sitemap) Generate(ctx *gin.Context) error {
-	articles := article.Search.All([]string{"id", "last_edit_time"})
+	if err := article.Post.Flush(); err != nil {
+		return err
+	}
+	articles, err := article.Post.All([]string{"id", "last_edit_time"})
+	if err != nil {
+		return err
+	}
 	if len(articles) < 0 {
 		return errors.New("no articles")
 	}
@@ -40,7 +46,7 @@ func (s *sitemap) Generate(ctx *gin.Context) error {
 		url.SetChangefreq(gositemap.Monthly)
 		st.AppendUrl(url)
 	}
-	_, err := st.Storage()
+	_, err = st.Storage()
 	if err != nil {
 		return err
 	}
