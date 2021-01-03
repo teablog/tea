@@ -11,6 +11,7 @@ import (
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/article"
+	"golang.org/x/net/proxy"
 	"net/http"
 	"net/url"
 	"path"
@@ -207,12 +208,38 @@ func getSitemapUrl() string {
 
 // pingGoogleSitemap 向google提交站点地图 https://developers.google.com/search/docs/guides/submit-URLs?hl=zh-Hans
 func pingGoogleSitemap() error {
-	proxy, _ := url.Parse(config.Proxy.GetLocalEndpoint())
+	proxy, _ := url.Parse(config.Proxy.Http())
 	clt := http.Client{
 		Timeout: 5 * time.Second,
 		Transport: &http.Transport{
 			Proxy:           http.ProxyURL(proxy),
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	sitemapUrl := url.QueryEscape(getSitemapUrl())
+	u := fmt.Sprintf("http://www.google.com/ping?sitemap=%s", sitemapUrl)
+	resp, err := clt.Get(u)
+	if err != nil {
+		return errors.Wrapf(err, "ping google sitemap err")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("ping google sitemap failed")
+	}
+	logger.Info("ping google sitemap success")
+	return nil
+}
+
+func pingGoogleSitemapProxySocks5() error {
+	dialer, err := proxy.SOCKS5("tcp", "127.0.0.1:7890", nil, proxy.Direct)
+	if err != nil {
+		return errors.Wrapf(err, "socks5 direct err")
+	}
+	clt := http.Client{
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Dial:            dialer.Dial,
 		},
 	}
 	sitemapUrl := url.QueryEscape(getSitemapUrl())

@@ -2,6 +2,7 @@ package account
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -10,6 +11,7 @@ import (
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
+	"golang.org/x/net/proxy"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -78,24 +80,37 @@ func (a *Account) Create(ctx *gin.Context, i Accouter) (data *Account, err error
 }
 
 func (a *Account) avatar(id, url string) string {
-	storageDir := config.GetKey("path::storage_dir").String()
+	storageDir := config.Path.StorageDir()
 	ext := path.Ext(url)
-	logger.Debugf("image: %s", config.GetKey("proxy::file").String()+url)
-	req, err := http.NewRequest("GET", config.GetKey("proxy::file").String()+url, strings.NewReader(""))
+	dialer, err := proxy.SOCKS5("tcp", config.Proxy.Socks5(), nil, proxy.Direct)
 	if err != nil {
-		panic(errors.Wrapf(err, "new http request err"))
+		logger.Errorf("new proxy socks5 err: %s", err.Error())
+		return url
 	}
-	client := &http.Client{
-		Timeout: time.Duration(5 * time.Second),
+	client := http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			Dial: dialer.Dial,
+		},
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		logger.Errorf("new http request err: %s", err.Error())
+		return url
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(errors.Wrapf(err, "client error"))
+		logger.Errorf("get %s err: %s", url, err.Error())
+		return url
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode > 299 {
 		res, _ := ioutil.ReadAll(resp.Body)
-		panic(errors.Errorf("[%d] response: %s", resp.StatusCode, res))
+		logger.Errorf("get url %s response %d %s", url, resp.StatusCode, res)
+		return url
 	}
 	if ext == "" {
 		switch resp.Header.Get("content-type") {
@@ -284,7 +299,7 @@ func (a *Account) SetCookie(ctx *gin.Context) {
 }
 
 func (a *Account) ExpireCookie(ctx *gin.Context) {
-	ctx.SetCookie(consts.CookieName, "", -1, "/", "." + config.Global.Domain(), false, false)
+	ctx.SetCookie(consts.CookieName, "", -1, "/", "."+config.Global.Domain(), false, false)
 }
 
 func (c *Cookie) VerifyCookie() bool {

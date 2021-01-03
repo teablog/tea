@@ -21,11 +21,11 @@ func (*_oauth) Github(ctx *gin.Context) {
 	}
 	redirectUri := ctx.DefaultQuery("redirect_uri", config.Global.Host())
 	github := account.NewGithub()
-	if err := github.Token(code); err != nil {
+	if err := github.TokenV2(code); err != nil {
 		ctx.String(http.StatusForbidden, err.Error())
 		return
 	}
-	if err := github.User(); err != nil {
+	if err := github.UserV2(); err != nil {
 		helper.Fail(ctx, err)
 		return
 	}

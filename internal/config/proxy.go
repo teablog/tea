@@ -1,15 +1,13 @@
 package config
 
-import "fmt"
-
 var Proxy *_proxy
 
 type _proxy struct{}
 
-func (p *_proxy) GetLocalEndpoint() string {
-	return fmt.Sprintf("http://127.0.0.1:%s", p.GetEndpoint())
+func (p *_proxy) Http() string {
+	return Config.Section("proxy").Key("http").String()
 }
 
-func (*_proxy) GetEndpoint() string {
-	return Config.Section("proxy").Key("endpoint").String()
+func (*_proxy) Socks5() string {
+	return Config.Section("proxy").Key("socks5").String()
 }

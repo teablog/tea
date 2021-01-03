@@ -2,11 +2,13 @@ package account
 
 import (
 	"bytes"
-	"github.com/teablog/tea/internal/config"
-	"github.com/teablog/tea/internal/logger"
+	"crypto/tls"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/logger"
+	"golang.org/x/net/proxy"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -34,30 +36,36 @@ func NewGithub() *_github {
 	return &_github{}
 }
 
-func (g *_github) Token(code string) (err error) {
-	body := gin.H{
-		"url":    "https://github.com/login/oauth/access_token",
-		"method": "POST",
-		"header": gin.H{
-			"Content-Type": "application/json",
-			"Accept":       "application/json",
-		},
-		"body": gin.H{
-			"client_id": config.GetKey("github::client_id").String(),
-			"client_secret": config.GetKey("github::client_secret").String(),
-			"code": code,
-		},
-		"skip_verify": false,
-		"timeout":     5 * time.Second,
+func (g *_github) TokenV2(code string) error {
+	dialer, err := proxy.SOCKS5("tcp", config.Proxy.Socks5(), nil, proxy.Direct)
+	if err != nil {
+		return errors.Wrapf(err, "proxy socks5 err")
 	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		panic(errors.Wrapf(err, "body json encode error: %s", err.Error()))
+	client := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			Dial: dialer.Dial,
+		},
+		Timeout: 10 * time.Second,
 	}
-	req, _ := http.NewRequest("POST", config.GetKey("proxy::request").String(), &buf)
-	client := http.Client{}
-	retries := 3
+	body := bytes.NewBuffer(nil)
+	if err := json.NewEncoder(body).Encode(gin.H{
+		"client_id":     config.Github.ClientId(),
+		"client_secret": config.Github.ClientSecret(),
+		"code":          code,
+	}); err != nil {
+		return errors.Wrapf(err, "github oauth access_token err")
+	}
+	req, err := http.NewRequest(http.MethodPost, "https://github.com/login/oauth/access_token", body)
+	if err != nil {
+		return errors.Wrapf(err, "github oauth access_token err")
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	var resp *http.Response
+	retries := 3
 	for retries > 0 {
 		resp, err = client.Do(req)
 		if err == nil {
@@ -66,7 +74,10 @@ func (g *_github) Token(code string) (err error) {
 		retries--
 	}
 	if err != nil {
-		panic(errors.Wrap(err, "request github oauth failed"))
+		panic(errors.Wrap(err, "client request error"))
+	}
+	if err != nil {
+		return errors.Wrapf(err, "github oauth access_tokoen err")
 	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
@@ -74,39 +85,42 @@ func (g *_github) Token(code string) (err error) {
 		panic(errors.Wrap(err, "response body read error"))
 	}
 	if resp.StatusCode > 299 {
-		return errors.Errorf("github oauth/access_token [%d] response: %s", resp.StatusCode, string(data))
+		return errors.Errorf("github oauth access_token [%d] response: %s", resp.StatusCode, string(data))
 	}
 	if err := json.Unmarshal(data, &g.t); err != nil {
-		panic(errors.Wrapf(err, "github oauth/access_token json decode error, response: %s", data))
+		panic(errors.Wrapf(err, "github oauth access_token err response: %s", data))
 	}
 	if g.t.AccessToken == "" {
-		logger.Errorf("oauth/access_token [%d] response: %s", resp.StatusCode, string(data))
+		logger.Errorf("github oauth access_token [%d] response: %s", resp.StatusCode, string(data))
 		return errors.Errorf("github授权登录失败")
 	}
-	return
+	return nil
 }
 
-func (g *_github) User() (err error) {
+func (g *_github) UserV2() error {
 	authorization := bytes.NewBufferString(g.t.TokenType)
 	authorization.WriteString(" ")
 	authorization.WriteString(g.t.AccessToken)
-	query := gin.H{
-		"url": "https://api.github.com/user",
-		"method": "GET",
-		"header": gin.H{
-			"Authorization": authorization.String(),
+	dialer, err := proxy.SOCKS5("tcp", config.Proxy.Socks5(), nil, proxy.Direct)
+	if err != nil {
+		return errors.Wrapf(err, "proxy socks5 err")
+	}
+	client := http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			Dial: dialer.Dial,
 		},
-		"skip_verify": false,
-		"timeout": 5 * time.Second,
 	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(query); err != nil {
-		panic(errors.Wrapf(err, "user query json encode error"))
+	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
+	if err != nil {
+		return errors.Wrapf(err, "new http request err")
 	}
-	req, _ := http.NewRequest("POST", config.GetKey("proxy::request").String(), &buf)
-	client := &http.Client{}
-	retries := 3
+	req.Header.Set("Authorization", authorization.String())
 	var resp *http.Response
+	retries := 3
 	for retries > 0 {
 		resp, err = client.Do(req)
 		if err == nil {
@@ -131,11 +145,11 @@ func (g *_github) User() (err error) {
 	if g.u.Id == 0 {
 		panic(errors.Wrapf(err, "github user access error, response: %s", string(data)))
 	}
-	return
+	return nil
 }
 
 func (g *_github) GetName() string {
-	if strings.Trim(g.u.Name, " ") == ""{
+	if strings.Trim(g.u.Name, " ") == "" {
 		u, err := url.Parse(g.u.Url)
 		if err != nil {
 			return ""
