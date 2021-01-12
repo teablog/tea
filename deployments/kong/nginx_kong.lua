@@ -85,8 +85,8 @@ server {
     access_log ${{PROXY_ACCESS_LOG}};
     error_log  ${{PROXY_ERROR_LOG}} ${{LOG_LEVEL}};
 
-    if ($host ～ /(douyacun\.com|server\.douyacun\.com|7www\.douyacun\.com|rank\.chinaz\.comwww\.douyacun\.com)/) {
-        rewrite ^/(.*) https://www.douyacun.com redirect;
+    if ( $host ~ /(douyacun\.com|server\.douyacun\.com|7www\.douyacun\.com|rank\.chinaz\.comwww\.douyacun\.com)/) {
+        rewrite ^/(.*) https://www.douyacun.com$1 redirect;
     }
 
 > if proxy_ssl_enabled then
