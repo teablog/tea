@@ -85,10 +85,6 @@ server {
     access_log ${{PROXY_ACCESS_LOG}};
     error_log  ${{PROXY_ERROR_LOG}} ${{LOG_LEVEL}};
 
-    if ( $host ~ /(douyacun\.com|server\.douyacun\.com|7www\.douyacun\.com|rank\.chinaz\.comwww\.douyacun\.com)/) {
-        rewrite ^/(.*) https://www.douyacun.com$1 redirect;
-    }
-
 > if proxy_ssl_enabled then
     ssl_certificate     ${{SSL_CERT}};
     ssl_certificate_key ${{SSL_CERT_KEY}};
@@ -127,6 +123,11 @@ server {
     }
 
     location / {
+        if ( $host ~ "(douyacun.com|server.douyacun.com|7www.douyacun.com|rank.chinaz.comwww.douyacun.com)") {
+            rewrite ^/(.*) https://www.douyacun.com$1 redirect;
+            break;
+        }
+
         default_type                    '';
 
         set $ctx_ref                    '';
