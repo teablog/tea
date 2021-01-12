@@ -60,7 +60,6 @@ services:
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_SSL_CERT: /data/cert/douyacun.com.cer
       KONG_SSL_CERT_KEY: /data/cert/douyacun.com.key
-      KONG_NGINX_HTTP_INCLUDE: /data/douyacun.com.conf
     depends_on:
       - kong-migration
       - kong-database
@@ -75,7 +74,7 @@ services:
       - "443:8443"
     volumes:
       - /data/cert:/data/cert
-      - /data/web/tea/deployments/kong/douyacun.com.conf:/data/douyacun.com.conf
+      - /data/web/tea/deployments/kong/nginx_kong.lua:/usr/local/share/lua/5.1/kong/templates/nginx_kong.lua
 
   #######################################
   # Konga database prepare
