@@ -123,7 +123,7 @@ server {
     }
 
     location / {
-        if ( $host ~ "(douyacun.com|server.douyacun.com|7www.douyacun.com|rank.chinaz.comwww.douyacun.com)") {
+        if ( $host ~ "(^douyacun.com$|^server.douyacun.com$|^7www.douyacun.com$|^rank.chinaz.comwww.douyacun.com$)") {
             rewrite ^/(.*) https://www.douyacun.com$1 redirect;
             break;
         }
