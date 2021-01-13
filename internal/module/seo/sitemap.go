@@ -74,13 +74,13 @@ func (s *sitemap) priority(t time.Time) float64 {
 	if p < 0 {
 		p = min
 	}
-	p = p + float64(int64(h)%720/720)*mp
+	dp := float64(int64(h)%720)/720*mp
+	p = p + dp
 	return p
 }
 
 func (s *sitemap) freq(t time.Time) gositemap.ChangeFreq {
-	d := t.Sub(time.Now())
-	h := d.Hours()
+	h := time.Now().Sub(t).Hours()
 	if h <= 168 {
 		return gositemap.Daily
 	} else if h > 168 && h < 720 {
