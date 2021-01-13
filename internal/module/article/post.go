@@ -161,6 +161,33 @@ func (p *_post) All(source []string) (ASlice, error) {
 	return p.Search(body)
 }
 
+func (p *_post) Today(source []string) (ASlice, error) {
+	//body := fmt.Sprintf(`{ "_source": ["%s"], "size": 10000, "query": { "bool": { "filter": { "range": {  }, "term": {"status": %d}  } } } }`, strings.Join(source, `","`), consts.StatusOn)
+	body := fmt.Sprintf(`{
+  "_source": ["%s"],
+  "size": 200,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "last_edit_time": {
+              "gte": "%s"
+            }
+          }
+        },
+        {
+          "term": {
+            "status": %d
+          }
+        }
+      ]
+    }
+  }
+}`, strings.Join(source, ","), time.Now().Format(consts.EsTimeYMDFormat), consts.StatusOn)
+	return p.Search(body)
+}
+
 func (*_post) Flush() error {
 	resp, err := db.ES.Indices.Flush(
 		func(request *esapi.IndicesFlushRequest) {

@@ -15,3 +15,11 @@ func TestPingGoogleSitemap(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestPingBaidu(t *testing.T)  {
+	config.Init("configs/prod.ini")
+	logger.NewDefaultLogger(os.Stdout)
+	if err := pingBaidu(); err != nil {
+		t.Error(err)
+	}
+}

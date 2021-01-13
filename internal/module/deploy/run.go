@@ -260,7 +260,7 @@ func pingBaidu() error {
 	clt := http.Client{
 		Timeout: 5 * time.Second,
 	}
-	articles, err := article.Post.All([]string{"id", "last_edit_time"})
+	articles, err := article.Post.Today([]string{"id", "last_edit_time"})
 	if err != nil {
 		return err
 	}
