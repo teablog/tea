@@ -7,13 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/module/article"
+	"math"
 	"path"
+	"time"
 )
 
 var Sitemap sitemap
 
 type sitemap struct{}
 
+// sitemap.xml 导出
+// 1. 从google导出已经收录的文章, 权重从3开始按时间降低
+// 2. 按时间开始降权
+// 3. sitemap.xml 收录图片
 func (s *sitemap) Generate(ctx *gin.Context) error {
 	if err := article.Post.Flush(); err != nil {
 		return err
@@ -42,8 +48,8 @@ func (s *sitemap) Generate(ctx *gin.Context) error {
 		url := gositemap.NewUrl()
 		url.SetLoc(fmt.Sprintf(host, v.Id))
 		url.SetLastmod(v.LastEditTime)
-		url.SetPriority(0.8)
-		url.SetChangefreq(gositemap.Monthly)
+		url.SetPriority(s.priority(v.LastEditTime))
+		url.SetChangefreq(s.freq(v.LastEditTime))
 		st.AppendUrl(url)
 	}
 	_, err = st.Storage()
@@ -51,4 +57,35 @@ func (s *sitemap) Generate(ctx *gin.Context) error {
 		return err
 	}
 	return nil
+}
+
+// 计算权重
+// 30天权重减1
+// 不足30天: (t % 30)/30
+func (s *sitemap) priority(t time.Time) float64 {
+	p := float64(1)   // 最大权重
+	mp := 0.1         // 月权重
+	min := float64(0) // 最小权重
+	now := time.Now()
+	d := now.Sub(t)
+	h := d.Hours()
+	m := math.Ceil(h / 720)
+	p = p - mp*m
+	if p < 0 {
+		p = min
+	}
+	p = p + float64(int64(h)%720/720)*mp
+	return p
+}
+
+func (s *sitemap) freq(t time.Time) gositemap.ChangeFreq {
+	d := t.Sub(time.Now())
+	h := d.Hours()
+	if h <= 168 {
+		return gositemap.Daily
+	} else if h > 168 && h < 720 {
+		return gositemap.Weekly
+	} else {
+		return gositemap.Monthly
+	}
 }
