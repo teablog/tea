@@ -2,10 +2,10 @@ package article
 
 import (
 	"bytes"
-	"github.com/teablog/tea/internal/consts"
-	"github.com/teablog/tea/internal/db"
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/consts"
+	"github.com/teablog/tea/internal/db"
 )
 
 var Label _labels
@@ -14,12 +14,12 @@ type _labels struct {
 	Label string `yaml:"label" json:"label"`
 }
 
-func (*_labels) List(size int) (data []string, err error) {
+func (*_labels) List(size int) (data ASlice, err error) {
 	var (
 		buf bytes.Buffer
 	)
 	query := map[string]interface{}{
-		"_source": []string{"label"},
+		"_source": []string{"label", "id"},
 		"size":    size,
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
@@ -52,19 +52,17 @@ func (*_labels) List(size int) (data []string, err error) {
 		if err != nil {
 			panic(errors.Wrap(err, "json decode错误"))
 		}
-		type _source struct {
-			Label string `json:"label"`
-		}
+
 		var hits []db.ESItemResponse
 		if err = json.Unmarshal(r.Hits.Hits, &hits); err != nil {
 			return nil, err
 		}
 		for _, v := range hits {
-			var source _source
-			if err := json.Unmarshal(v.Source, &source); err != nil {
+			var source *Article
+			if err := json.Unmarshal(v.Source, source); err != nil {
 				panic(err)
 			}
-			data = append(data, source.Label)
+			data = append(data, source)
 		}
 		return data, nil
 	}

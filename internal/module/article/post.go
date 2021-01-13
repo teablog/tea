@@ -188,6 +188,32 @@ func (p *_post) Today(source []string) (ASlice, error) {
 	return p.Search(body)
 }
 
+func (p *_post) Labels(size int) (ASlice, error)  {
+	var (
+		buf bytes.Buffer
+	)
+	query := map[string]interface{}{
+		"_source": []string{"label", "id"},
+		"size":    size,
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"filter": map[string]interface{}{
+					"script": map[string]interface{}{
+						"script": map[string]interface{}{
+							"source": "doc['label'].size() > 0",
+						},
+					},
+				},
+			},
+		},
+	}
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		panic(errors.Wrap(err, "json encode错误"))
+	}
+	return p.Search(buf.String())
+}
+
+// 刷新文档
 func (*_post) Flush() error {
 	resp, err := db.ES.Indices.Flush(
 		func(request *esapi.IndicesFlushRequest) {

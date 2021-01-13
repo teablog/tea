@@ -44,7 +44,7 @@ func (*_article) Labels(c *gin.Context) {
 		}
 		size = n
 	}
-	labels, _ := article.Label.List(size)
+	labels, _ := article.Post.Labels(size)
 	helper.Success(c, labels)
 	return
 }
