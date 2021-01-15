@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/article"
@@ -61,13 +62,15 @@ func (*_article) View(c *gin.Context) {
 		return
 	}
 	// 封面
-	at.CoverRaw = at.Cover
-	at.Cover = article.Post.ConvertWebp(c, at.Cover)
+	if len(at.Cover) > 0 {
+		at.CoverRaw = config.Sever.CdnHost() + at.Cover
+		at.Cover = config.Sever.CdnHost() + article.Post.ConvertWebp(c, at.Cover)
+	}
 	// 内容图片
 	at.Content = article.Post.ConvertContentWebP(c, at.Content)
 	// 微信二维码
-	at.WechatSubscriptionQrcodeRaw = at.WechatSubscriptionQrcode
-	at.WechatSubscriptionQrcode = article.Post.ConvertWebp(c, at.WechatSubscriptionQrcode)
+	at.WechatSubscriptionQrcodeRaw = config.Sever.CdnHost() +  at.WechatSubscriptionQrcode
+	at.WechatSubscriptionQrcode = config.Sever.CdnHost() + article.Post.ConvertWebp(c, at.WechatSubscriptionQrcode)
 	helper.Success(c, at)
 }
 
