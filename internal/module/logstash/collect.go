@@ -3,6 +3,7 @@ package logstash
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/logger"
 	"io/ioutil"
@@ -25,7 +26,7 @@ type KongHttpLog struct {
 	} `json:"latencies"`
 	Request struct {
 		Querystring map[string]string `json:"querystring"`
-		Size        int64             `json:"size"`
+		Size        json.RawMessage   `json:"size"`
 		Uri         string            `json:"uri"`
 		Url         string            `json:"url"`
 		Headers     map[string]string `json:"headers"`
@@ -49,7 +50,7 @@ func Accept(ctx *gin.Context) error {
 	logger.Debugf("request body: %s", string(data))
 	r := new(KongHttpLog)
 	if err := json.Unmarshal(data, r); err != nil {
-		return err
+		return errors.Wrapf(err, "raw data: %s", data)
 	}
 	if sp, ok := match(r.Request.Headers["user-agent"]); ok {
 		r.Spider = sp
