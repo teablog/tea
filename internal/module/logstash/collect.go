@@ -20,9 +20,9 @@ type tries struct {
 
 type KongHttpLog struct {
 	Latencies struct {
-		Request int64 `json:"request"`
-		Kong    int64 `json:"kong"`
-		Proxy   int64 `json:"proxy"`
+		Request json.Number `json:"request"`
+		Kong    json.Number `json:"kong"`
+		Proxy   json.Number `json:"proxy"`
 	} `json:"latencies"`
 	Request struct {
 		Querystring map[string]string `json:"querystring"`
@@ -36,8 +36,8 @@ type KongHttpLog struct {
 	Tries    []tries `json:"tries"`
 	Response struct {
 		Headers map[string]string `json:"headers"`
-		Status  int64             `json:"status"`
-		Size    int64             `json:"size"`
+		Status  json.Number       `json:"status"`
+		Size    json.Number       `json:"size"`
 	}
 	Spider string `json:"spider"`
 }
