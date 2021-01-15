@@ -66,6 +66,7 @@ func (*_article) View(c *gin.Context) {
 	// 内容图片
 	at.Content = article.Post.ConvertContentWebP(c, at.Content)
 	// 微信二维码
+	at.WechatSubscriptionQrcodeRaw = at.WechatSubscriptionQrcode
 	at.WechatSubscriptionQrcode = article.Post.ConvertWebp(c, at.WechatSubscriptionQrcode)
 	helper.Success(c, at)
 }

@@ -27,26 +27,27 @@ var (
 type _post struct{}
 
 type Article struct {
-	Title                    string    `json:"title"`
-	Keywords                 string    `json:"keywords"`
-	Label                    string    `json:"label"`
-	Cover                    string    `json:"cover"`
-	CoverRaw                 string    `json:"cover_raw"`
-	Description              string    `json:"description"`
-	Author                   string    `json:"author"`
-	Date                     time.Time `json:"date"`
-	LastEditTime             time.Time `json:"last_edit_time"`
-	Content                  string    `json:"content"`
-	Email                    string    `json:"email"`
-	Github                   string    `json:"github"`
-	Key                      string    `json:"key"`
-	Id                       string    `json:"id"`
-	Topic                    string    `json:"topic"`
-	FilePath                 string    `json:"-"`
-	WechatSubscriptionQrcode string    `json:"wechat_subscription_qrcode"`
-	WechatSubscription       string    `json:"wechat_subscription"`
-	Md5                      string    `json:"md5"`
-	Pv                       int       `json:"pv"`
+	Title                       string    `json:"title"`
+	Keywords                    string    `json:"keywords"`
+	Label                       string    `json:"label"`
+	Cover                       string    `json:"cover"`
+	CoverRaw                    string    `json:"cover_raw"`
+	Description                 string    `json:"description"`
+	Author                      string    `json:"author"`
+	Date                        time.Time `json:"date"`
+	LastEditTime                time.Time `json:"last_edit_time"`
+	Content                     string    `json:"content"`
+	Email                       string    `json:"email"`
+	Github                      string    `json:"github"`
+	Key                         string    `json:"key"`
+	Id                          string    `json:"id"`
+	Topic                       string    `json:"topic"`
+	FilePath                    string    `json:"-"`
+	WechatSubscriptionQrcodeRaw string    `json:"wechat_subscription_qrcode_raw"`
+	WechatSubscriptionQrcode    string    `json:"wechat_subscription_qrcode"`
+	WechatSubscription          string    `json:"wechat_subscription"`
+	Md5                         string    `json:"md5"`
+	Pv                          int       `json:"pv"`
 }
 
 func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
