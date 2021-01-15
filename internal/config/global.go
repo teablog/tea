@@ -20,3 +20,7 @@ func (*_global) Domain() string {
 func (*_global) Protocol() string {
 	return Config.Section("global").Key("protocol").String()
 }
+
+func (*_global) CdnHost() string {
+	return Config.Section("global").Key("cdn_host").String()
+}

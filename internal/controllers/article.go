@@ -63,14 +63,14 @@ func (*_article) View(c *gin.Context) {
 	}
 	// 封面
 	if len(at.Cover) > 0 {
-		at.CoverRaw = config.Sever.CdnHost() + at.Cover
-		at.Cover = config.Sever.CdnHost() + article.Post.ConvertWebp(c, at.Cover)
+		at.CoverRaw = config.Global.CdnHost() + at.Cover
+		at.Cover = config.Global.CdnHost() + article.Post.ConvertWebp(c, at.Cover)
 	}
 	// 内容图片
 	at.Content = article.Post.ConvertContentWebP(c, at.Content)
 	// 微信二维码
-	at.WechatSubscriptionQrcodeRaw = config.Sever.CdnHost() +  at.WechatSubscriptionQrcode
-	at.WechatSubscriptionQrcode = config.Sever.CdnHost() + article.Post.ConvertWebp(c, at.WechatSubscriptionQrcode)
+	at.WechatSubscriptionQrcodeRaw = config.Global.CdnHost() +  at.WechatSubscriptionQrcode
+	at.WechatSubscriptionQrcode = config.Global.CdnHost() + article.Post.ConvertWebp(c, at.WechatSubscriptionQrcode)
 	helper.Success(c, at)
 }
 
