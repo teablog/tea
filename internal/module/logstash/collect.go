@@ -26,7 +26,7 @@ type KongHttpLog struct {
 	} `json:"latencies"`
 	Request struct {
 		Querystring map[string]string `json:"querystring"`
-		Size        json.RawMessage   `json:"size"`
+		Size        json.Number       `json:"size"`
 		Uri         string            `json:"uri"`
 		Url         string            `json:"url"`
 		Headers     map[string]string `json:"headers"`
