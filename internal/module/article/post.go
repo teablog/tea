@@ -31,6 +31,7 @@ type Article struct {
 	Keywords                 string    `json:"keywords"`
 	Label                    string    `json:"label"`
 	Cover                    string    `json:"cover"`
+	CoverRaw                 string    `json:"cover_raw"`
 	Description              string    `json:"description"`
 	Author                   string    `json:"author"`
 	Date                     time.Time `json:"date"`
@@ -188,7 +189,7 @@ func (p *_post) Today(source []string) (ASlice, error) {
 	return p.Search(body)
 }
 
-func (p *_post) Labels(size int) (ASlice, error)  {
+func (p *_post) Labels(size int) (ASlice, error) {
 	var (
 		buf bytes.Buffer
 	)

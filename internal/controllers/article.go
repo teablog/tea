@@ -61,6 +61,7 @@ func (*_article) View(c *gin.Context) {
 		return
 	}
 	// 封面
+	at.CoverRaw = at.Cover
 	at.Cover = article.Post.ConvertWebp(c, at.Cover)
 	// 内容图片
 	at.Content = article.Post.ConvertContentWebP(c, at.Content)

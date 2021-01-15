@@ -26,5 +26,3 @@ file=
 ipip_file=
 geo_file=
 
-[logstash]
-spider=(Baiduspider|Googlebot|Googlebot|360Spider|Sogou|Bingbot)
