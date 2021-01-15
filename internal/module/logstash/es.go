@@ -14,8 +14,8 @@ var ES *_es
 
 type _es struct{}
 
-func (*_es) KongHttpLog(data string, spider string) error {
-	index := fmt.Sprintf(consts.SpiderIndices, spider, time.Now().Format(consts.TimeYM))
+func (*_es) KongHttpLog(data string) error {
+	index := fmt.Sprintf(consts.SpiderIndices, time.Now().Format("200601"))
 	resp, err := db.ES.Index(
 		index,
 		strings.NewReader(data),

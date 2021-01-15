@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/logger"
 	"io/ioutil"
 	"regexp"
 )
@@ -22,6 +23,7 @@ func Accept(ctx *gin.Context) error {
 	if err != nil {
 		return err
 	}
+	logger.Debugf("request body: %s", string(data))
 	r := new(KongHttpLog)
 	if err := json.Unmarshal(data, r); err != nil {
 		return err
@@ -30,7 +32,8 @@ func Accept(ctx *gin.Context) error {
 		return nil
 	}
 	if sp, ok := match(r.Request.Headers.UA); ok {
-		if err := ES.KongHttpLog(string(data), sp); err != nil {
+		logger.Debugf("match ua: %s", sp)
+		if err := ES.KongHttpLog(string(data)); err != nil {
 			return err
 		}
 	}
@@ -49,5 +52,5 @@ func match(spider string) (string, bool) {
 	if len(rs) == 0 {
 		return "", false
 	}
-	return rs[0], false
+	return rs[0], true
 }
