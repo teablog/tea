@@ -5,10 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/logger"
 	"io/ioutil"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type tries struct {
@@ -40,6 +42,7 @@ type KongHttpLog struct {
 		Size    json.Number       `json:"size"`
 	}
 	Spider string `json:"spider"`
+	Date   string `json:"date"`
 }
 
 func Accept(ctx *gin.Context) error {
@@ -54,15 +57,13 @@ func Accept(ctx *gin.Context) error {
 	}
 	if sp, ok := match(r.Request.Headers["user-agent"]); ok {
 		r.Spider = sp
-	}
-	if !filterUri(r) {
-		return nil
-	}
-	if nData, err := json.Marshal(r); err != nil {
-		return err
-	} else {
-		if err := ES.KongHttpLog(string(nData)); err != nil {
+		r.Date = time.Now().Format(consts.EsTimeFormat)
+		if nData, err := json.Marshal(r); err != nil {
 			return err
+		} else {
+			if err := ES.KongHttpLog(string(nData)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

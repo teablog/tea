@@ -15,7 +15,7 @@ var ES *_es
 type _es struct{}
 
 func (*_es) KongHttpLog(data string) error {
-	index := fmt.Sprintf(consts.DouyacunLogIndices, time.Now().Format("20060102"))
+	index := fmt.Sprintf(consts.SpiderIndices, time.Now().Format("200601"))
 	resp, err := db.ES.Index(
 		index,
 		strings.NewReader(data),

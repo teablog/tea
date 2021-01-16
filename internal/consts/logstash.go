@@ -1,3 +1,9 @@
 package consts
 
-const DouyacunLogIndices = "douyacun_log_%s"
+const (
+	SpiderIndices = "spider_%s"
+)
+
+
+
+
