@@ -1,7 +1,7 @@
 package consts
 
 const (
-	SpiderIndices = "test_spider_%s"
+	SpiderIndices = "spider_%s"
 )
 
 
