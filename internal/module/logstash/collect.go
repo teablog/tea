@@ -50,12 +50,12 @@ func Accept(ctx *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	logger.Debugf("request body: %s", string(data))
 	r := new(KongHttpLog)
 	if err := json.Unmarshal(data, r); err != nil {
 		return errors.Wrapf(err, "raw data: %s", data)
 	}
 	if sp, ok := match(r.Request.Headers["user-agent"]); ok {
+		logger.Debugf("request body: %s", string(data))
 		r.Spider = sp
 		r.Date = time.Now().Format(consts.EsTimeFormat)
 		if nData, err := json.Marshal(r); err != nil {
