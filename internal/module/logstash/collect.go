@@ -55,6 +55,10 @@ func Accept(ctx *gin.Context) error {
 		return errors.Wrapf(err, "raw data: %s", data)
 	}
 	if sp, ok := match(r.Request.Headers["user-agent"]); ok {
+		if filterUri(r) {
+			logger.Debugf("filter uri: %s", r.Request.Uri)
+			return nil
+		}
 		logger.Debugf("request body: %s", string(data))
 		r.Spider = sp
 		r.Date = time.Now().Format(consts.EsTimeFormat)
@@ -90,9 +94,9 @@ func filterUri(data *KongHttpLog) bool {
 	for _, v := range config.Logstash.FilterUri() {
 		if vv := strings.Trim(v, " "); vv != "" {
 			if strings.HasPrefix(data.Request.Uri, vv) {
-				return false
+				return true
 			}
 		}
 	}
-	return true
+	return false
 }
