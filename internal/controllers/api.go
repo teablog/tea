@@ -54,7 +54,11 @@ func NewRouter(router *gin.Engine) {
 		}
 		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
-		api.POST("/logstash/collect", Logstash.Collect)
+		// 需要简单鉴权的API
+		tokenAuth := api.Group("/", middleware.TokenAuthCheck())
+		{
+			tokenAuth.POST("/logstash/collect", Logstash.Collect)
+		}
 	}
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")

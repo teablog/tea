@@ -24,3 +24,7 @@ func (*_global) Protocol() string {
 func (*_global) CdnHost() string {
 	return Config.Section("global").Key("cdn_host").String()
 }
+
+func (*_global) Token() string {
+	return Config.Section("global").Key("token").String()
+}
