@@ -51,7 +51,7 @@ type Article struct {
 	Pv                          int       `json:"pv"`
 }
 
-func (p *_post) List(ctx *gin.Context, page int) (int64, ASlice, error) {
+func (p *_post) List(ctx *gin.Context, page int) (int, ASlice, error) {
 	skip := (page - 1) * PageSize
 	var (
 		buf bytes.Buffer
@@ -112,7 +112,7 @@ func (*_post) Get(id string) (bool, *Article, error) {
 	return true, a, nil
 }
 
-func (*_post) Search(body string) (int64, ASlice, error) {
+func (*_post) Search(body string) (int, ASlice, error) {
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
 		db.ES.Search.WithBody(strings.NewReader(body)),
@@ -136,7 +136,7 @@ func (*_post) Search(body string) (int64, ASlice, error) {
 	for _, v := range hits {
 		m = append(m, v.Source)
 	}
-	return 0, m, nil
+	return eslist.Hits.Total.Value, m, nil
 }
 
 func (p *_post) All(source []string) (ASlice, error) {

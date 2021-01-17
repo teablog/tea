@@ -68,5 +68,6 @@ func NewRouter(router *gin.Engine) {
 	router.Static("/ext_dict", path.Join(storageDir, "ext_dict"))
 	router.StaticFile("/sitemap.xml", path.Join(storageDir, "seo", "sitemap.xml"))
 	router.StaticFile("/robots.txt", path.Join(storageDir, "seo", "robots.txt"))
+	router.StaticFile("/ads.txt", path.Join(storageDir, "seo", "ads.txt"))
 	router.StaticFile("/favicon.ico", path.Join(storageDir, "favicon.ico"))
 }
