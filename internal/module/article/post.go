@@ -7,6 +7,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
@@ -282,6 +283,9 @@ func (p *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
 		re, _ := regexp.Compile(consts.MarkDownImageRegex)
 		for _, v := range re.FindAllStringSubmatch(content, -1) {
 			filename := v[2] + v[3]
+			if !strings.HasPrefix(filename, "http") {
+				filename = config.Global.CdnHost() + "/" + strings.TrimRight(filename, "/")
+			}
 			WebP := Post.ConvertWebp(ctx, filename)
 			if WebP != filename {
 				// 替换文件image路径
