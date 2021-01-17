@@ -28,27 +28,28 @@ var (
 type _post struct{}
 
 type Article struct {
-	Title                       string    `json:"title"`
-	Keywords                    string    `json:"keywords"`
-	Label                       string    `json:"label"`
-	Cover                       string    `json:"cover"`
-	CoverRaw                    string    `json:"cover_raw"`
-	Description                 string    `json:"description"`
-	Author                      string    `json:"author"`
-	Date                        time.Time `json:"date"`
-	LastEditTime                time.Time `json:"last_edit_time"`
-	Content                     string    `json:"content"`
-	Email                       string    `json:"email"`
-	Github                      string    `json:"github"`
-	Key                         string    `json:"key"`
-	Id                          string    `json:"id"`
-	Topic                       string    `json:"topic"`
-	FilePath                    string    `json:"-"`
-	WechatSubscriptionQrcodeRaw string    `json:"wechat_subscription_qrcode_raw"`
-	WechatSubscriptionQrcode    string    `json:"wechat_subscription_qrcode"`
-	WechatSubscription          string    `json:"wechat_subscription"`
-	Md5                         string    `json:"md5"`
-	Pv                          int       `json:"pv"`
+	Title                       string             `json:"title"`
+	Keywords                    string             `json:"keywords"`
+	Label                       string             `json:"label"`
+	Cover                       string             `json:"cover"`
+	CoverRaw                    string             `json:"cover_raw"`
+	Description                 string             `json:"description"`
+	Author                      string             `json:"author"`
+	Date                        time.Time          `json:"date"`
+	LastEditTime                time.Time          `json:"last_edit_time"`
+	Content                     string             `json:"content"`
+	Email                       string             `json:"email"`
+	Github                      string             `json:"github"`
+	Key                         string             `json:"key"`
+	Id                          string             `json:"id"`
+	Topic                       string             `json:"topic"`
+	FilePath                    string             `json:"-"`
+	WechatSubscriptionQrcodeRaw string             `json:"wechat_subscription_qrcode_raw"`
+	WechatSubscriptionQrcode    string             `json:"wechat_subscription_qrcode"`
+	WechatSubscription          string             `json:"wechat_subscription"`
+	Md5                         string             `json:"md5"`
+	Pv                          int                `json:"pv"`
+	Type                        consts.ArticleType `json:"type"`
 }
 
 func (p *_post) List(ctx *gin.Context, page int) (int, ASlice, error) {
@@ -74,10 +75,17 @@ func (p *_post) List(ctx *gin.Context, page int) (int, ASlice, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-	for _, v := range data {
+	adSensePos := config.Ad.AdSenseFeedsPos()
+	list := make(ASlice, 0, len(data)+1)
+	for k, v := range data {
+		// 插入广告位
+		if adSensePos > 0 && k == adSensePos {
+			list = append(list, &Article{Type: consts.ArticleTypeAdsense})
+		}
 		v.Cover = p.ConvertWebp(ctx, v.Cover)
+		list = append(list, v)
 	}
-	return c, data, nil
+	return c, list, nil
 }
 
 // Get 根据Id获取文章

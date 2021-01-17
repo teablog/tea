@@ -110,3 +110,14 @@ const (
 	MarkDownImageRegex = `!\[(.*)\]\((.*)(.png|.gif|.jpg|.jpeg|.webp)(.*)\)`
 	MarkDownLocalJump  = `\[.*\]\((\.?\/?(\w+\/?)+\.md)(.*)\)`
 )
+
+type ArticleType int
+
+const (
+	ArticleTypeArt ArticleType = iota
+	ArticleTypeAdsense
+)
+
+func (a ArticleType) Int() int {
+	return int(a)
+}
