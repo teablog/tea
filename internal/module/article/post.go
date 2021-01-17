@@ -50,12 +50,10 @@ type Article struct {
 	Pv                          int       `json:"pv"`
 }
 
-func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
+func (p *_post) List(ctx *gin.Context, page int) (int64, ASlice, error) {
 	skip := (page - 1) * PageSize
 	var (
-		data  = make([]interface{}, 0, PageSize)
-		total int64
-		buf   bytes.Buffer
+		buf bytes.Buffer
 	)
 	query := map[string]interface{}{
 		"from": skip,
@@ -71,32 +69,14 @@ func (*_post) List(ctx *gin.Context, page int) (int64, []interface{}, error) {
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		panic(errors.Wrap(err, "json encode 错误"))
 	}
-	res, err := db.ES.Search(
-		db.ES.Search.WithIndex(consts.IndicesArticleCost),
-		db.ES.Search.WithBody(&buf),
-	)
+	c, data, err := p.Search(buf.String())
 	if err != nil {
 		return 0, nil, err
 	}
-	defer res.Body.Close()
-	if res.IsError() {
-		resp, _ := ioutil.ReadAll(res.Body)
-		panic(errors.New(string(resp)))
+	for _, v := range data {
+		v.Cover = p.ConvertWebp(ctx, v.Cover)
 	}
-	var r db.ESListResponse
-	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
-		return 0, nil, err
-	}
-	// 总条数
-	total = int64(r.Hits.Total.Value)
-	var hits []db.ESItemResponse
-	if err = json.Unmarshal(r.Hits.Hits, &hits); err != nil {
-		return 0, nil, err
-	}
-	for _, v := range hits {
-		data = append(data, v.Source)
-	}
-	return total, data, nil
+	return c, data, nil
 }
 
 // Get 根据Id获取文章
@@ -131,36 +111,37 @@ func (*_post) Get(id string) (bool, *Article, error) {
 	return true, a, nil
 }
 
-func (*_post) Search(body string) (ASlice, error) {
+func (*_post) Search(body string) (int64, ASlice, error) {
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
 		db.ES.Search.WithBody(strings.NewReader(body)),
 	)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	defer resp.Body.Close()
 	var eslist db.ESListResponse
 	if err := json.NewDecoder(resp.Body).Decode(&eslist); err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	type source struct {
 		Source *Article `json:"_source"`
 	}
 	hits := make([]*source, 0)
 	if err := json.Unmarshal(eslist.Hits.Hits, &hits); err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	m := make(ASlice, 0)
 	for _, v := range hits {
 		m = append(m, v.Source)
 	}
-	return m, nil
+	return 0, m, nil
 }
 
 func (p *_post) All(source []string) (ASlice, error) {
 	body := fmt.Sprintf(`{ "_source": ["%s"], "size": 10000, "query": { "term": {"status": %d}} }`, strings.Join(source, `","`), consts.StatusOn)
-	return p.Search(body)
+	_, data, err := p.Search(body)
+	return data, err
 }
 
 func (p *_post) Today(source []string) (ASlice, error) {
@@ -187,7 +168,8 @@ func (p *_post) Today(source []string) (ASlice, error) {
     }
   }
 }`, strings.Join(source, ","), time.Now().Format(consts.EsTimeYMDFormat), consts.StatusOn)
-	return p.Search(body)
+	_, data, err := p.Search(body)
+	return data, err
 }
 
 func (p *_post) Labels(size int) (ASlice, error) {
@@ -212,7 +194,8 @@ func (p *_post) Labels(size int) (ASlice, error) {
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		panic(errors.Wrap(err, "json encode错误"))
 	}
-	return p.Search(buf.String())
+	_, data, err := p.Search(buf.String())
+	return data, err
 }
 
 // 刷新文档
