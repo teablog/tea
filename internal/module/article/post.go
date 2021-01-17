@@ -284,7 +284,7 @@ func (p *_post) ConvertContentWebP(ctx *gin.Context, content string) string {
 		for _, v := range re.FindAllStringSubmatch(content, -1) {
 			filename := v[2] + v[3]
 			if !strings.HasPrefix(filename, "http") {
-				filename = config.Global.CdnHost() + "/" + strings.TrimRight(filename, "/")
+				filename = config.Global.CdnHost() + "/" + strings.TrimLeft(filename, "/")
 			}
 			WebP := Post.ConvertWebp(ctx, filename)
 			if WebP != filename {
