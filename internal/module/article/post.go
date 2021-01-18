@@ -50,6 +50,7 @@ type Article struct {
 	Md5                         string             `json:"md5"`
 	Pv                          int                `json:"pv"`
 	Type                        consts.ArticleType `json:"type"`
+	Highlight                   []string           `json:"highlight"`
 }
 
 func (p *_post) List(ctx *gin.Context, page int) (int, ASlice, error) {

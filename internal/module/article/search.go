@@ -37,12 +37,11 @@ type response struct {
 	} `json:"hits"`
 }
 
-func (*_search) List(q string) (total int64, data []interface{}, err error) {
+func (*_search) List(q string) (int64, ASlice, error) {
 	var (
 		buf bytes.Buffer
 		r   response
 	)
-	data = make([]interface{}, 0)
 	query := map[string]interface{}{
 		"_source": []string{"author", "title", "description", "topic", "id", "date", "last_edit_time"},
 		"query": map[string]interface{}{
@@ -57,7 +56,7 @@ func (*_search) List(q string) (total int64, data []interface{}, err error) {
 			},
 		},
 	}
-	if err = json.NewEncoder(&buf).Encode(query); err != nil {
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		panic(errors.Wrap(err, "json encode 错误"))
 	}
 	res, err := db.ES.Search(
@@ -75,17 +74,12 @@ func (*_search) List(q string) (total int64, data []interface{}, err error) {
 	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
 		panic(errors.Wrap(err, "json decode 错误"))
 	}
-	total = r.Hits.Total.Value
+
+	list := make(ASlice, 0, len(r.Hits.Hits))
+	total := r.Hits.Total.Value
 	for _, v := range r.Hits.Hits {
-		tmp := map[string]interface{}{
-			"date":      v.Article.Date,
-			"id":        v.Article.Id,
-			"author":    v.Article.Author,
-			"topic":     v.Article.Topic,
-			"title":     v.Article.Title,
-			"highlight": v.Highlight.Content,
-		}
-		data = append(data, tmp)
+		v.Article.Highlight = v.Highlight.Content
+		list = append(list, &v.Article)
 	}
-	return
+	return total, list, nil
 }
