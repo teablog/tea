@@ -29,7 +29,7 @@ type response struct {
 			Value int64 `json:"value"`
 		} `json:"total"`
 		Hits []struct {
-			Article   Article `json:"_source"`
+			Article   *Article `json:"_source"`
 			Highlight struct {
 				Content []string `json:"content"`
 			} `json:"highlight"`
@@ -79,7 +79,7 @@ func (*_search) List(q string) (int64, ASlice, error) {
 	total := r.Hits.Total.Value
 	for _, v := range r.Hits.Hits {
 		v.Article.Highlight = v.Highlight.Content
-		list = append(list, &v.Article)
+		list = append(list, v.Article)
 	}
 	return total, list, nil
 }
