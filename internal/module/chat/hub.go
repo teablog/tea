@@ -116,7 +116,7 @@ func (h *messageHub) store() {
 }
 
 func (h *messageHub) Start() {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for {
 			select {
