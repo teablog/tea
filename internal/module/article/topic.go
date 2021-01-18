@@ -2,23 +2,21 @@ package article
 
 import (
 	"bytes"
-	"github.com/teablog/tea/internal/consts"
-	"github.com/teablog/tea/internal/db"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"io/ioutil"
+	"github.com/teablog/tea/internal/config"
+	"github.com/teablog/tea/internal/consts"
 )
 
 var Topics _topic
 
 type _topic struct{}
 
-func (*_topic) List(topic string, page int) (total int64, data []interface{}, err error) {
+func (*_topic) List(topic string, page int) (total int, data ASlice, err error) {
 	var (
 		buf bytes.Buffer
-		r   map[string]interface{}
 	)
-	data = make([]interface{}, 0)
+	data = make(ASlice, 0)
 	skip := (page - 1) * PageSize
 	query := map[string]interface{}{
 		"from": skip,
@@ -40,27 +38,14 @@ func (*_topic) List(topic string, page int) (total int64, data []interface{}, er
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
 		panic(errors.Wrap(err, "json encode错误"))
 	}
-
-	res, err := db.ES.Search(
-		db.ES.Search.WithIndex(consts.IndicesArticleCost),
-		db.ES.Search.WithBody(&buf),
-	)
-	defer res.Body.Close()
-	if err != nil {
-		panic(errors.Wrap(err, "es search错误"))
+	total, data, err = Post.Search(buf.String())
+	adPos := config.Ad.AdSenseFeedsPos()
+	list := make(ASlice, 0)
+	for k, v := range data {
+		if adPos != 0 && adPos == k {
+			list = append(list, &Article{Type: consts.ArticleTypeAdsense})
+		}
+		list = append(list, v)
 	}
-	if res.IsError() {
-		resp, _ := ioutil.ReadAll(res.Body)
-		panic(errors.New(string(resp)))
-	}
-	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
-		panic(errors.Wrap(err, "json decode 错误"))
-	}
-
-	total = int64(r["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64))
-
-	for _, v := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
-		data = append(data, v.(map[string]interface{})["_source"])
-	}
-	return
+	return total, list, err
 }
