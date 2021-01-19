@@ -63,11 +63,5 @@ func NewRouter(router *gin.Engine) {
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
-	// 静态文件
-	router.Static("/images", path.Join(storageDir, "images"))
-	router.Static("/ext_dict", path.Join(storageDir, "ext_dict"))
-	router.StaticFile("/sitemap.xml", path.Join(storageDir, "seo", "sitemap.xml"))
-	router.StaticFile("/robots.txt", path.Join(storageDir, "seo", "robots.txt"))
-	router.StaticFile("/ads.txt", path.Join(storageDir, "seo", "ads.txt"))
 	router.StaticFile("/favicon.ico", path.Join(storageDir, "favicon.ico"))
 }
