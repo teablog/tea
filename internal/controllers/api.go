@@ -2,12 +2,10 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/chat"
 	"github.com/teablog/tea/internal/module/tools"
 	"net/http"
-	"path"
 )
 
 func Init(engine *gin.Engine) {
@@ -17,7 +15,6 @@ func Init(engine *gin.Engine) {
 func NewRouter(router *gin.Engine) {
 	hub := chat.NewHub()
 	go hub.Run()
-	storageDir := config.Path.StorageDir()
 	api := router.Group("/api")
 	{
 		// 文章
@@ -44,7 +41,7 @@ func NewRouter(router *gin.Engine) {
 			help.GET("/token", Help.Token)
 		}
 		// websocket
-		auth := api.Group("/", middleware.LoginCheck())
+		auth := api.Group("/")
 		{
 			auth.GET("/ws/join", func(context *gin.Context) {
 				WS.Join(context, hub)
@@ -63,11 +60,4 @@ func NewRouter(router *gin.Engine) {
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
-	// 静态文件
-	router.Static("/images", path.Join(storageDir, "images"))
-	router.Static("/ext_dict", path.Join(storageDir, "ext_dict"))
-	router.StaticFile("/sitemap.xml", path.Join(storageDir, "seo", "sitemap.xml"))
-	router.StaticFile("/robots.txt", path.Join(storageDir, "seo", "robots.txt"))
-	router.StaticFile("/ads.txt", path.Join(storageDir, "seo", "ads.txt"))
-	router.StaticFile("/favicon.ico", path.Join(storageDir, "favicon.ico"))
 }
