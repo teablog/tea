@@ -57,7 +57,7 @@ func NewElasticsearch(address []string, user, password string) {
 			CloudID:               "",
 			APIKey:                "",
 			RetryOnStatus:         nil,
-			DisableRetry:          false,
+			DisableRetry:          true,
 			EnableRetryOnTimeout:  false,
 			MaxRetries:            0,
 			DiscoverNodesOnStart:  false,

@@ -151,7 +151,7 @@ func (a *Account) EnableAccess() bool {
 	return true
 }
 
-func (a *Account) Get(id string) (*Account, error) {
+func Get(id string) (*Account, error) {
 	type esResponse struct {
 		Id     string  `json:"_id"`
 		Source Account `json:"_source"`
@@ -184,7 +184,7 @@ func (a *Account) Get(id string) (*Account, error) {
 	return s, nil
 }
 
-func (a *Account) Search(body string) (int, AcctSlice, error) {
+func Search(body string) (int, AcctSlice, error) {
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
 		db.ES.Search.WithBody(strings.NewReader(body)),

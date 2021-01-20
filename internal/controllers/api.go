@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/middleware"
+	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/module/chat"
 	"github.com/teablog/tea/internal/module/tools"
 	"net/http"
@@ -28,7 +29,10 @@ func NewRouter(router *gin.Engine) {
 		api.GET("/oauth/github", Oauth.Github)
 		api.POST("/oauth/google", Oauth.Google)
 		// 账户
-		api.Group("/account/name/exists")
+		acct := api.Group("/account")
+		{
+			acct.GET("/name/exists", account.NameExists)
+		}
 		// 工具
 		tool := api.Group("/tools")
 		{
