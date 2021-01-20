@@ -35,7 +35,7 @@ func (s *sitemap) Generate(ctx *gin.Context) error {
 	st.SetPretty(true)
 	st.SetCompress(false)
 	st.SetDefaultHost(config.Global.Host())
-	st.SetPublicPath(path.Join(config.Path.StorageDir(), "seo"))
+	st.SetPublicPath(path.Join(config.Path.StorageDir(), "public"))
 	host := config.Global.Host() + "/article/%s"
 
 	url := gositemap.NewUrl()

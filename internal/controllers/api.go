@@ -24,9 +24,11 @@ func NewRouter(router *gin.Engine) {
 		api.GET("/topic/:topic", Topic.List)
 		api.GET("/search/articles", Article.Search)
 		api.POST("/subscribe", Subscribe.Create)
-		// 账户
+		// 授权
 		api.GET("/oauth/github", Oauth.Github)
 		api.POST("/oauth/google", Oauth.Google)
+		// 账户
+		api.Group("/account/name/exists")
 		// 工具
 		tool := api.Group("/tools")
 		{
@@ -46,7 +48,6 @@ func NewRouter(router *gin.Engine) {
 			auth.GET("/ws/join", func(context *gin.Context) {
 				WS.Join(context, hub)
 			})
-			auth.GET("/account/list", Account.List)
 			auth.POST("/ws/article/comment", Article.Comment(hub))
 		}
 		api.GET("/ws/article/messages", Article.Messages)

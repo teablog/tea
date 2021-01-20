@@ -137,55 +137,6 @@ func (a *Account) avatar(id, url string) string {
 	return res
 }
 
-func (a *Account) All(name string) (*[]Account, error) {
-	var (
-		buf bytes.Buffer
-		err error
-	)
-	query := map[string]interface{}{
-		"size": 20,
-	}
-	if len(name) > 0 {
-		query["query"] = map[string]interface{}{
-			"match": map[string]interface{}{
-				"name.pinyin": name,
-			},
-		}
-	}
-	if err = json.NewEncoder(&buf).Encode(query); err != nil {
-		panic(errors.Wrap(err, "account list query json encode failed"))
-	}
-	type esResponse struct {
-		Hits struct {
-			Total struct {
-				Value int `json:"value"`
-			} `json:"total"`
-			Hits []struct {
-				Source Account `json:"_source"`
-				Id     string  `json:"_id"`
-			} `json:"hits"`
-		} `json:"hits"`
-	}
-	var r esResponse
-	res, err := db.ES.Search(
-		db.ES.Search.WithIndex(consts.IndicesAccountConst),
-		db.ES.Search.WithBody(&buf),
-	)
-	if err != nil {
-		panic(errors.Wrap(err, "account list es search error"))
-	}
-	defer res.Body.Close()
-	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
-		panic(errors.Wrapf(err, "[%d] es response body json decode failed", res.StatusCode))
-	}
-	t := make([]Account, 0)
-	for _, v := range r.Hits.Hits {
-		v.Source.Id = v.Id
-		t = append(t, v.Source)
-	}
-	return &t, nil
-}
-
 func (a *Account) EnableAccess() bool {
 	res, err := db.ES.Exists(
 		consts.IndicesAccountConst,
@@ -198,48 +149,6 @@ func (a *Account) EnableAccess() bool {
 		return false
 	}
 	return true
-}
-
-func (a *Account) Mget(ids []string) *[]Account {
-	// 查询members
-	type responseBody struct {
-		Docs []struct {
-			Source Account `json:"_source"`
-			Id     string  `json:"_id"`
-		} `json:"docs"`
-	}
-	idsStr, err := json.Marshal(map[string]interface{}{
-		"ids": ids,
-	})
-	if err != nil {
-		panic(errors.Wrap(err, "channel create json encode failed"))
-	}
-	res, err := db.ES.Mget(
-		strings.NewReader(string(idsStr)),
-		db.ES.Mget.WithIndex(consts.IndicesAccountConst),
-	)
-	if err != nil {
-		panic(errors.Wrap(err, "es mget request failed"))
-	}
-	defer res.Body.Close()
-	if res.IsError() {
-		resp, _ := ioutil.ReadAll(res.Body)
-		panic(errors.Errorf("[%d] es mget response: %s", res.StatusCode, resp))
-	}
-	var r responseBody
-	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
-		panic(errors.Wrap(err, "json decode es response body failed"))
-	}
-
-	var (
-		m []Account
-	)
-	for _, v := range r.Docs {
-		v.Source.Id = v.Id
-		m = append(m, v.Source)
-	}
-
-	return &m
 }
 
 func (a *Account) Get(id string) (*Account, error) {
@@ -275,41 +184,29 @@ func (a *Account) Get(id string) (*Account, error) {
 	return s, nil
 }
 
-type Cookie struct {
-	*Account
-	Md5 string `json:"md5"`
-}
-
-func (a *Account) SetCookie(ctx *gin.Context) {
-	var (
-		c   Cookie
-		err error
+func (a *Account) Search(body string) (int, AcctSlice, error) {
+	resp, err := db.ES.Search(
+		db.ES.Search.WithIndex(consts.IndicesArticleCost),
+		db.ES.Search.WithBody(strings.NewReader(body)),
 	)
-	c.Account = a
-	data, err := json.Marshal(a)
 	if err != nil {
-		panic(errors.Wrap(err, "set cookie json encode failed"))
+		return 0, nil, err
 	}
-	c.Md5 = helper.Md532(data)
-	cookie, err := json.Marshal(c)
-	if err != nil {
-		panic(errors.Wrap(err, "set cookie json encode failed"))
+	defer resp.Body.Close()
+	var eslist db.ESListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&eslist); err != nil {
+		return 0, nil, err
 	}
-	ctx.SetCookie(consts.CookieName, string(cookie), 31536000, "/", "."+config.Global.Domain(), false, false)
-}
-
-func (a *Account) ExpireCookie(ctx *gin.Context) {
-	ctx.SetCookie(consts.CookieName, "", -1, "/", "."+config.Global.Domain(), false, false)
-}
-
-func (c *Cookie) VerifyCookie() bool {
-	// 验证cookie完整性
-	a, err := json.Marshal(c.Account)
-	if err != nil {
-		return false
+	type source struct {
+		Source *Account `json:"_source"`
 	}
-	if c.Md5 != helper.Md532(a) {
-		return false
+	hits := make([]*source, 0)
+	if err := json.Unmarshal(eslist.Hits.Hits, &hits); err != nil {
+		return 0, nil, err
 	}
-	return true
+	m := make(AcctSlice, 0)
+	for _, v := range hits {
+		m = append(m, v.Source)
+	}
+	return eslist.Hits.Total.Value, m, nil
 }

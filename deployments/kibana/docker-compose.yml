@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+  kibana:
+    image: docker.io/kibana:7.5.0
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    volumes:
+      - /data/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
