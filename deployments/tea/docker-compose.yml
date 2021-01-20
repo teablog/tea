@@ -4,12 +4,8 @@ services:
 
   douyacun-api:
     image: registry.cn-hangzhou.aliyuncs.com/douyacun/tea:latest
+    container_name: tea
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9003/ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     environment:
       _TEA_CONF: /data/web/tea/configs/prod.ini
     ports:
