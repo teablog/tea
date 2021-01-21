@@ -21,15 +21,6 @@ import (
 	"time"
 )
 
-type Accouter interface {
-	GetName() string
-	GetEmail() string
-	GetId() string
-	GetAvatarUrl() string
-	GetUrl() string
-	Source() string
-}
-
 type Account struct {
 	Name      string    `json:"name"`
 	Source    string    `json:"source"`
@@ -45,19 +36,18 @@ func NewAccount() *Account {
 	return &Account{}
 }
 
-func (a *Account) Create(ctx *gin.Context, i Accouter) (data *Account, err error) {
-	id := helper.Md516([]byte(i.GetId() + i.Source()))
-	ava := a.avatar(id, i.GetAvatarUrl())
+func (a *Account) Create(ctx *gin.Context) (data *Account, err error) {
+	//id := helper.Md516([]byte(i.Id() + i.Source()))
+	id := helper.Md516([]byte(a.Name))
 	var buf bytes.Buffer
 	data = &Account{
-		Name:      i.GetName(),
-		Source:    i.Source(),
-		Id:        i.GetId(),
-		Url:       i.GetUrl(),
-		AvatarUrl: ava,
-		Email:     i.GetEmail(),
-		CreateAt:  time.Now(),
-		Ip:        helper.RealIP(ctx.Request),
+		Name:     a.Name,
+		Source:   a.Source,
+		Id:       id,
+		Url:      a.Url,
+		Email:    a.Email,
+		CreateAt: time.Now(),
+		Ip:       helper.RealIP(ctx.Request),
 	}
 	if err := json.NewEncoder(&buf).Encode(data); err != nil {
 		panic(errors.Wrap(err, "Account create json encode failed"))

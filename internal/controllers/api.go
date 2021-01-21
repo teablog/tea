@@ -32,6 +32,7 @@ func NewRouter(router *gin.Engine) {
 		acct := api.Group("/account")
 		{
 			acct.GET("/name/exists", account.NameExists)
+			acct.POST("/register", account.Register)
 		}
 		// 工具
 		tool := api.Group("/tools")

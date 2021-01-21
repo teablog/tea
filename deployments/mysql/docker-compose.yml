@@ -1,0 +1,11 @@
+version: "3"
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      # 随机密码，会输出在stdout中
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql:/var/lib/mysql
