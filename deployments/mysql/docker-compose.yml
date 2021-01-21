@@ -5,9 +5,9 @@ services:
     container_name: mysql
     environment:
       # 随机密码，会输出在stdout中
-      MYSQL_RANDOM_ROOT_PASSWORD: pwgen
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - "3306:3306"
     user: 1000:50
     volumes:
-      - /data/mysql:/var/lib/mysql
+      - ${DB_PATH_HOST}: /var/lib/mysql
