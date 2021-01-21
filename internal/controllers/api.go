@@ -47,12 +47,11 @@ func NewRouter(router *gin.Engine) {
 			help.GET("/token", Help.Token)
 		}
 		// websocket
-		auth := api.Group("/")
+		ws := api.Group("/ws")
 		{
-			auth.GET("/ws/join", func(context *gin.Context) {
+			ws.GET("join", func(context *gin.Context) {
 				WS.Join(context, hub)
 			})
-			auth.POST("/ws/article/comment", Article.Comment(hub))
 		}
 		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
