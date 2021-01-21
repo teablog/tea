@@ -5,7 +5,7 @@ services:
     container_name: mysql
     environment:
       # 随机密码，会输出在stdout中
-      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_RANDOM_ROOT_PASSWORD: pwgen
     ports:
       - "3306:3306"
     user: 1000:1000
