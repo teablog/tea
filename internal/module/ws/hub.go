@@ -37,6 +37,7 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			// 注册客户端
 			h.clientHub[client] = struct{}{}
+			client.send <- client.hub.Count().Bytes()
 		case client := <-h.unregister:
 			delete(h.clientHub, client)
 		}
