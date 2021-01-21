@@ -7,7 +7,7 @@ import (
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/article"
-	"github.com/teablog/tea/internal/module/chat"
+	"github.com/teablog/tea/internal/module/message"
 	"github.com/teablog/tea/internal/validate"
 	"net/http"
 	"strconv"
@@ -100,26 +100,10 @@ func (*_article) Messages(ctx *gin.Context) {
 		helper.Fail(ctx, err)
 		return
 	}
-
-	total, data, err := chat.Message.FindMessages(vld)
+	total, data, err := message.FindMessages(vld)
 	if err != nil {
 		helper.Fail(ctx, err)
 		return
 	}
 	helper.Success(ctx, gin.H{"total": total, "list": data})
-}
-
-func (*_article) Comment(hub *chat.Hub) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var message chat.ClientMessage
-		if err := ctx.Bind(&message); err != nil {
-			helper.Fail(ctx, err)
-			return
-		}
-		if err := chat.Message.SendMessage(ctx, hub, message); err != nil {
-			helper.Fail(ctx, err)
-			return
-		}
-		helper.Success(ctx, "success")
-	}
 }

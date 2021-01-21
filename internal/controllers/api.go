@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
-	"github.com/teablog/tea/internal/module/chat"
 	"github.com/teablog/tea/internal/module/tools"
+	"github.com/teablog/tea/internal/module/ws"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ func Init(engine *gin.Engine) {
 }
 
 func NewRouter(router *gin.Engine) {
-	hub := chat.NewHub()
+	hub := ws.NewHub()
 	go hub.Run()
 	api := router.Group("/api")
 	{
@@ -26,8 +26,8 @@ func NewRouter(router *gin.Engine) {
 		api.GET("/search/articles", Article.Search)
 		api.POST("/subscribe", Subscribe.Create)
 		// 授权
-		api.GET("/oauth/github", Oauth.Github)
-		api.POST("/oauth/google", Oauth.Google)
+		//api.GET("/oauth/github", Oauth.Github)
+		//api.POST("/oauth/google", Oauth.Google)
 		// 账户
 		acct := api.Group("/account")
 		{
@@ -48,13 +48,9 @@ func NewRouter(router *gin.Engine) {
 			help.GET("/token", Help.Token)
 		}
 		// websocket
-		auth := api.Group("/")
-		{
-			auth.GET("/ws/join", func(context *gin.Context) {
-				WS.Join(context, hub)
-			})
-			auth.POST("/ws/article/comment", Article.Comment(hub))
-		}
+		api.GET("/ws/join", func(ctx *gin.Context) {
+			ws.ServeWs(ctx, hub)
+		})
 		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
 		// 需要简单鉴权的API
