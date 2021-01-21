@@ -10,10 +10,7 @@ echo '--- push docker image to aliyun';
 docker push registry.cn-hangzhou.aliyuncs.com/douyacun/tea:latest
 
 echo "--- deploy tea";
-ssh douyacun2 < "${CURDIR}"/deploy.sh
-
-echo "--- sync image...";
-sh "${CURDIR}"/sync_image.sh
+ssh d2 < "${CURDIR}"/deploy.sh
 
 #echo "--- docker image prune..."
 #echo y|docker image prune

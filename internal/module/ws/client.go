@@ -1,10 +1,8 @@
-package chat
+package ws
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/logger"
-	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"log"
 	"net/http"
@@ -77,12 +75,6 @@ func (c *Client) readPump() {
 			break
 		}
 		logger.Debugf("[%s] %s %s", c.conn.RemoteAddr(), time.Now().String(), message)
-		m := ClientMessage{}
-		if err := json.Unmarshal(message, &m); err == nil {
-			c.hub.broadcast <- NewMessage(c.account, m)
-		} else {
-			logger.Errorf("client read Pump error: %s", err)
-		}
 	}
 }
 
@@ -92,9 +84,10 @@ func (c *Client) readPump() {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (c *Client) writePump() {
-	ticker := time.NewTicker(pingPeriod)
+	pingTicker := time.NewTicker(pingPeriod)
+	countTicker := time.NewTicker(10 * time.Second)
 	defer func() {
-		ticker.Stop()
+		pingTicker.Stop()
 		_ = c.conn.Close()
 	}()
 	for {
@@ -119,11 +112,12 @@ func (c *Client) writePump() {
 				_, _ = w.Write(newline)
 				_, _ = w.Write(<-c.send)
 			}
-
 			if err := w.Close(); err != nil {
 				return
 			}
-		case <-ticker.C:
+		case <-countTicker.C:
+			c.send <- c.hub.Count().Bytes()
+		case <-pingTicker.C:
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
@@ -133,27 +127,14 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(ctx *gin.Context, hub *Hub, articleId string) {
+func ServeWs(ctx *gin.Context, hub *Hub) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		logger.Wrapf(err, "[websocket]")
 		return
 	}
-	a := middleware.GetAccount(ctx)
-	if a == nil {
-		return
-	} else {
-		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), account: a, articleId: articleId}
-		client.hub.register <- client
-		//hub.broadcast <- NewSystemMsg(fmt.Sprintf("欢迎 [%s] 加入", client.account.Name), consts.GlobalChannelId)
-		go client.writePump()
-		go client.readPump()
-	}
-}
-
-func (c *Client) toMap() map[string]interface{} {
-	return map[string]interface{}{
-		"id":   c.account.Id,
-		"name": c.account.Name,
-	}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client.hub.register <- client
+	go client.writePump()
+	go client.readPump()
 }

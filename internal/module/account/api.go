@@ -25,3 +25,21 @@ func NameExists(ctx *gin.Context) {
 	helper.Success(ctx, c == 0)
 	return
 }
+
+func Register(ctx *gin.Context) {
+	acct := NewAccount()
+	if err := ctx.Bind(acct); err != nil {
+		logger.Errorf("参数异常: %s", err.Error())
+		helper.Fail(ctx, errors.New("参数异常~"))
+		return
+	}
+	u, err := acct.Create(ctx)
+	if err != nil {
+		logger.Wrapf(err, "account register err")
+		helper.Fail(ctx, errors.New("服务异常～"))
+		return
+	}
+	u.SetCookie(ctx)
+	helper.Success(ctx, u)
+	return
+}

@@ -1,16 +1,14 @@
-package chat
+package message
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
-	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
@@ -132,13 +130,8 @@ func (rows ServerMessageSlice) store() bool {
 	return true
 }
 
-var Message *_message
-
-type _message struct {
-}
-
 // FindMessages 获取评论列表
-func (*_message) FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, error) {
+func FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, error) {
 	var (
 		before time.Time
 		after  time.Time
@@ -215,15 +208,4 @@ func (*_message) FindMessages(req validate.MessagesValidator) (int, serverMessag
 	sort.Sort(rows)
 
 	return r.Hits.Total.Value, rows, nil
-}
-
-// SendMessage 评论
-func (*_message) SendMessage(ctx *gin.Context, hub *Hub, message ClientMessage) error {
-	acct := middleware.GetAccount(ctx)
-	if acct != nil {
-		hub.broadcast <- NewMessage(acct, message)
-		return nil
-	} else {
-		return errors.New("")
-	}
 }
