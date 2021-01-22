@@ -2,6 +2,7 @@ package ws
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/account"
 	"log"
@@ -40,16 +41,11 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub *Hub
-
-	// The websocket connection.
-	conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
-	send chan []byte
-
-	account *account.Account
-
+	hub       *Hub
+	conn      *websocket.Conn
+	send      chan []byte
+	account   *account.Account
+	uuid      string
 	articleId string
 }
 
@@ -128,12 +124,19 @@ func (c *Client) writePump() {
 
 // serveWs handles websocket requests from the peer.
 func ServeWs(ctx *gin.Context, hub *Hub) {
+	//ctx.JSON(200, "ok")
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		logger.Wrapf(err, "[websocket]")
 		return
 	}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	if artId := ctx.Query(""); artId != "" {
+		client.articleId = artId
+	}
+	if uuid, ok := ctx.Get(consts.CookieUUID); ok {
+		client.uuid = uuid.(string)
+	}
 	client.hub.register <- client
 	go client.writePump()
 	go client.readPump()
