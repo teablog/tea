@@ -10,17 +10,14 @@ import (
 
 func CookieUUID() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ck, err := ctx.Cookie(consts.CookieUUID)
-		if err != nil {
-			logger.Wrapf(err, "ctx cooke read err")
-		}
+		ck, _ := ctx.Cookie(consts.CookieUUID)
 		if ck == "" {
 			uid, err := uuid.NewV4()
 			if err != nil {
 				logger.Wrapf(err, "failed to generate UUID:")
 			} else {
 				// 设置cookie
-				ctx.SetCookie(consts.CookieUUID, uid.String(), config.Global.CookieMaxAge(), "/", config.Global.Domain(), false, false)
+				ctx.SetCookie(consts.CookieUUID, uid.String(), config.Global.CookieMaxAge(), "/", "."+config.Global.Domain(), false, false)
 			}
 			// 避免首次访问，取不到cookie
 			ctx.Set(consts.CookieUUID, uid.String())
