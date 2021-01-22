@@ -48,9 +48,12 @@ func NewRouter(router *gin.Engine) {
 			help.GET("/token", Help.Token)
 		}
 		// websocket
-		api.GET("/ws/join", func(ctx *gin.Context) {
-			ws.ServeWs(ctx, hub)
-		})
+		wss := api.Group("/", middleware.CookieUUID())
+		{
+			wss.GET("/ws/join", func(ctx *gin.Context) {
+				ws.ServeWs(ctx, hub)
+			})
+		}
 		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
 		// 需要简单鉴权的API

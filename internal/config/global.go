@@ -28,3 +28,11 @@ func (*_global) CdnHost() string {
 func (*_global) Token() string {
 	return Config.Section("global").Key("token").String()
 }
+
+func (*_global) CookieMaxAge() int {
+	t, _ := Config.Section("global").Key("cookie_max_age").Int()
+	if t == 0 {
+		return 31536000
+	}
+	return t
+}
