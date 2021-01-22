@@ -2,8 +2,8 @@ package ws
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/logger"
-	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"log"
 	"net/http"
@@ -41,10 +41,10 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub *Hub
-	conn *websocket.Conn
-	send chan []byte
-	account *account.Account
+	hub       *Hub
+	conn      *websocket.Conn
+	send      chan []byte
+	account   *account.Account
 	uuid      string
 	articleId string
 }
@@ -81,7 +81,7 @@ func (c *Client) readPump() {
 // executing all writes from this goroutine.
 func (c *Client) writePump() {
 	pingTicker := time.NewTicker(pingPeriod)
-	countTicker := time.NewTicker(3 * time.Second)
+	countTicker := time.NewTicker(10 * time.Second)
 	defer func() {
 		pingTicker.Stop()
 		_ = c.conn.Close()
@@ -129,14 +129,14 @@ func ServeWs(ctx *gin.Context, hub *Hub) {
 		logger.Wrapf(err, "[websocket]")
 		return
 	}
-	a := middleware.GetAccount(ctx)
-	if a == nil {
-		return
-	} else {
-		client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
-		client.hub.register <- client
-		//hub.broadcast <- NewSystemMsg(fmt.Sprintf("欢迎 [%s] 加入", client.account.Name), consts.GlobalChannelId)
-		go client.writePump()
-		go client.readPump()
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	if artId := ctx.Query(""); artId != "" {
+		client.articleId = artId
 	}
+	if uuid, ok := ctx.Get(consts.CookieUUID); ok {
+		client.uuid = uuid.(string)
+	}
+	client.hub.register <- client
+	go client.writePump()
+	go client.readPump()
 }

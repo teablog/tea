@@ -9,9 +9,6 @@ type Responser interface {
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
-	// Registered clients.
-	client map[*Client]struct{}
-
 	// Registered uid
 	uuid map[string]int
 
@@ -30,7 +27,6 @@ func NewHub() *Hub {
 		broadcast:  make(chan Responser),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		client:     make(map[*Client]struct{}),
 		uuid:       make(map[string]int),
 	}
 }
@@ -40,15 +36,17 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			// 注册客户端
-			h.client[client] = struct{}{}
-			//if _, ok := h.uuid[client.]
-
+			client.send <- client.hub.Count().Bytes()
+			h.uuid[client.uuid]++
 		case client := <-h.unregister:
-			delete(h.client, client)
+			h.uuid[client.uuid]--
+			if h.uuid[client.uuid] == 0 {
+				delete(h.uuid, client.uuid)
+			}
 		}
 	}
 }
 
 func (h *Hub) Count() *ServerMessage {
-	return &ServerMessage{Type: OnlineMsg, Content: len(h.client)}
+	return &ServerMessage{Type: OnlineMsg, Content: len(h.uuid)}
 }
