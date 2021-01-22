@@ -123,7 +123,7 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(ctx *gin.Context, hub *Hub) {
+func ServeWs(ctx *gin.Context) {
 	//ctx.JSON(200, "ok")
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {

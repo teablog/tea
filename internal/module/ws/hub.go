@@ -22,8 +22,10 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func NewHub() *Hub {
-	return &Hub{
+var hub *Hub
+
+func init() {
+	hub = &Hub{
 		broadcast:  make(chan Responser),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),

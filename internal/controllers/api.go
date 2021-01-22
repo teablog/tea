@@ -5,6 +5,7 @@ import (
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/module/tools"
+	"github.com/teablog/tea/internal/module/tracke"
 	"github.com/teablog/tea/internal/module/ws"
 	"net/http"
 )
@@ -14,10 +15,12 @@ func Init(engine *gin.Engine) {
 }
 
 func NewRouter(router *gin.Engine) {
-	hub := ws.NewHub()
-	go hub.Run()
 	api := router.Group("/api")
 	{
+		// websocket
+		ws.Route(api)
+		// 数据上报
+		tracke.Route(api)
 		// 文章
 		api.GET("/articles", Article.List)
 		api.GET("/articles/labels", Article.Labels)
@@ -46,13 +49,6 @@ func NewRouter(router *gin.Engine) {
 		help := api.Group("/helper")
 		{
 			help.GET("/token", Help.Token)
-		}
-		// websocket
-		wss := api.Group("/", middleware.CookieUUID())
-		{
-			wss.GET("/ws/join", func(ctx *gin.Context) {
-				ws.ServeWs(ctx, hub)
-			})
 		}
 		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
