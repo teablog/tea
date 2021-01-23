@@ -3,9 +3,11 @@ package article
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/pkg/errors"
+	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
+	"github.com/teablog/tea/internal/helper"
+	"github.com/teablog/tea/internal/logger"
 	"io/ioutil"
 	"time"
 )
@@ -37,7 +39,7 @@ type response struct {
 	} `json:"hits"`
 }
 
-func (*_search) List(q string) (int64, ASlice, error) {
+func (*_search) List(ctx *gin.Context) {
 	var (
 		buf bytes.Buffer
 		r   response
@@ -46,7 +48,7 @@ func (*_search) List(q string) (int64, ASlice, error) {
 		"_source": []string{"author", "title", "description", "topic", "id", "date", "last_edit_time"},
 		"query": map[string]interface{}{
 			"multi_match": map[string]interface{}{
-				"query":  q,
+				"query":  ctx.Query("q"),
 				"fields": []string{"title.keyword", "author", "keywords", "content", "label"},
 			},
 		},
@@ -57,7 +59,9 @@ func (*_search) List(q string) (int64, ASlice, error) {
 		},
 	}
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
-		panic(errors.Wrap(err, "json encode 错误"))
+		logger.Wrapf(err, "article search json encode err")
+		helper.ServerErr(ctx)
+		return
 	}
 	res, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
@@ -65,14 +69,20 @@ func (*_search) List(q string) (int64, ASlice, error) {
 	)
 	defer res.Body.Close()
 	if err != nil {
-		panic(errors.Wrap(err, "es search错误"))
+		logger.Wrapf(err, "article search es err")
+		helper.ServerErr(ctx)
+		return
 	}
 	if res.IsError() {
 		resp, _ := ioutil.ReadAll(res.Body)
-		panic(errors.New(string(resp)))
+		logger.Errorf("es response err: %s", resp)
+		helper.ServerErr(ctx)
+		return
 	}
 	if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
-		panic(errors.Wrap(err, "json decode 错误"))
+		logger.Wrapf(err, "article search json decoder err")
+		helper.ServerErr(ctx)
+		return
 	}
 
 	list := make(ASlice, 0, len(r.Hits.Hits))
@@ -81,5 +91,7 @@ func (*_search) List(q string) (int64, ASlice, error) {
 		v.Article.Highlight = v.Highlight.Content
 		list = append(list, v.Article)
 	}
-	return total, list, nil
+
+	helper.Success(ctx, gin.H{"total": total, "data": list})
+	return
 }

@@ -39,7 +39,7 @@ func Run(dir string) {
 		logger.Fatalf("upload qr code err: %s", err)
 	}
 	// 历史文章
-	all, err := article.Post.All([]string{"md5", "id", "title", "pv"})
+	all, err := article.Art.All([]string{"md5", "id", "title", "pv"})
 	if err != nil {
 		logger.Fatalf("all articles md5 load err: %s", err.Error())
 	}
@@ -146,7 +146,7 @@ func Run(dir string) {
 			toDel = append(toDel, v.Id)
 		}
 	}
-	if err := article.Post.DeleteByIds(toDel); err != nil {
+	if err := article.Art.DeleteByIds(toDel); err != nil {
 		logger.Errorf("delete err: %s", err.Error())
 	}
 
@@ -260,7 +260,7 @@ func pingBaidu() error {
 	clt := http.Client{
 		Timeout: 5 * time.Second,
 	}
-	articles, err := article.Post.Today([]string{"id", "last_edit_time"})
+	articles, err := article.Art.Today([]string{"id", "last_edit_time"})
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,7 @@ func (*_topic) List(topic string, page int) (total int, data ASlice, err error) 
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
 		panic(errors.Wrap(err, "json encode错误"))
 	}
-	total, data, err = Post.Search(buf.String())
+	total, data, err = Art.Search(buf.String())
 	adPos := config.Ad.AdSenseFeedsPos()
 	list := make(ASlice, 0)
 	for k, v := range data {

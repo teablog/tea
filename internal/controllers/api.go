@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
+	"github.com/teablog/tea/internal/module/article"
 	"github.com/teablog/tea/internal/module/tools"
 	"github.com/teablog/tea/internal/module/tracke"
 	"github.com/teablog/tea/internal/module/ws"
@@ -22,11 +23,8 @@ func NewRouter(router *gin.Engine) {
 		// 数据上报
 		tracke.Route(api)
 		// 文章
-		api.GET("/articles", Article.List)
-		api.GET("/articles/labels", Article.Labels)
-		api.GET("/article/:id", Article.View)
+		article.Route(api)
 		api.GET("/topic/:topic", Topic.List)
-		api.GET("/search/articles", Article.Search)
 		api.POST("/subscribe", Subscribe.Create)
 		// 授权
 		//api.GET("/oauth/github", Oauth.Github)

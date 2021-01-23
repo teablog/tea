@@ -201,7 +201,7 @@ func (a *Article) UploadImage(bookDir string, topic string) (err error) {
 				targetTopic = a.Topic
 			}
 			targetFileName := path.Base(target)
-			targetID := article.Post.GenerateId(targetTopic, a.Key, targetFileName)
+			targetID := article.Art.GenerateId(targetTopic, a.Key, targetFileName)
 			targetUrl := fmt.Sprintf("/article/%s", targetID)
 			replaceContent := strings.ReplaceAll(v[0], target, targetUrl)
 			debugTemplate(fmt.Sprintf("本地跳转：%s -> %s", v[0], replaceContent))
@@ -242,7 +242,7 @@ func (a *Article) Complete(c *Conf, topicTitle string, fileName string) error {
 	a.WechatSubscriptionQrcode = c.WechatSubscriptionQrcode
 	a.Topic = strings.ToLower(topicTitle)
 	a.Key = c.Key
-	a.ID = article.Post.GenerateId(a.Topic, a.Key, fileName)
+	a.ID = article.Art.GenerateId(a.Topic, a.Key, fileName)
 	a.Status = consts.StatusOn
 	return nil
 }

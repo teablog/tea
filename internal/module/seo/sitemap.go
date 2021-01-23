@@ -21,10 +21,10 @@ type sitemap struct{}
 // 2. 按时间开始降权
 // 3. sitemap.xml 收录图片
 func (s *sitemap) Generate(ctx *gin.Context) error {
-	if err := article.Post.Flush(); err != nil {
+	if err := article.Art.Flush(); err != nil {
 		return err
 	}
-	articles, err := article.Post.All([]string{"id", "last_edit_time"})
+	articles, err := article.Art.All([]string{"id", "last_edit_time"})
 	if err != nil {
 		return err
 	}

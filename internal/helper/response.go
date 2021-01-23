@@ -29,6 +29,15 @@ func Fail(ctx *gin.Context, err error) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
+func ServerErr(ctx *gin.Context)  {
+	resp := Response{
+		Code:    http.StatusInternalServerError,
+		Message: "服务出错了～",
+		Data:    nil,
+	}
+	ctx.JSON(http.StatusOK, resp)
+}
+
 func FailWithCode(ctx *gin.Context, err error, code int) {
 	resp := Response{
 		Code:    code,

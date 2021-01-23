@@ -60,14 +60,13 @@ func (c *Client) readPump() {
 	_ = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { _ = c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, _, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		logger.Debugf("[%s] %s %s", c.conn.RemoteAddr(), time.Now().String(), message)
 	}
 }
 
@@ -111,7 +110,6 @@ func (c *Client) writePump() {
 		case <-countTicker.C:
 			c.send <- hub.Count().Bytes()
 		case <-pingTicker.C:
-			logger.Debugf("ping: %s", c.uuid)
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
