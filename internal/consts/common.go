@@ -23,3 +23,4 @@ const (
 
 const CookieName = "douyacun"
 const CookieUUID = "douyacun-uuid"
+const CookieUUIDV2 = "douyacun-uuid-v2"

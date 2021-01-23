@@ -3,6 +3,7 @@ module github.com/teablog/tea
 go 1.12
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/douyacun/gositemap v0.0.4
 	github.com/elastic/go-elasticsearch/v7 v7.5.0
 	github.com/gin-gonic/gin v1.4.0

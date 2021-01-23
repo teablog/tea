@@ -31,6 +31,7 @@ func init() {
 		unregister: make(chan *Client),
 		uuid:       make(map[string]int),
 	}
+	hub.Run()
 }
 
 func (h *Hub) Run() {

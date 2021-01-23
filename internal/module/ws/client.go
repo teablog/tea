@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/logger"
-	"github.com/teablog/tea/internal/module/account"
 	"log"
 	"net/http"
 	"time"
@@ -44,7 +43,6 @@ type Client struct {
 	hub       *Hub
 	conn      *websocket.Conn
 	send      chan []byte
-	account   *account.Account
 	uuid      string
 	articleId string
 }
@@ -112,8 +110,10 @@ func (c *Client) writePump() {
 				return
 			}
 		case <-countTicker.C:
-			c.send <- c.hub.Count().Bytes()
+			logger.Debugf("count: %d", c.hub.Count())
+			c.send <- hub.Count().Bytes()
 		case <-pingTicker.C:
+			logger.Debugf("ping: %s", c.uuid)
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
@@ -130,14 +130,14 @@ func ServeWs(ctx *gin.Context) {
 		logger.Wrapf(err, "[websocket]")
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{conn: conn, send: make(chan []byte, 256)}
 	if artId := ctx.Query(""); artId != "" {
 		client.articleId = artId
 	}
-	if uuid, ok := ctx.Get(consts.CookieUUID); ok {
-		client.uuid = uuid.(string)
+	if uid, ok := ctx.Get(consts.CookieUUIDV2); ok {
+		client.uuid = uid.(string)
 	}
-	client.hub.register <- client
+	hub.register <- client
 	go client.writePump()
 	go client.readPump()
 }
