@@ -24,11 +24,7 @@ func NewRouter(router *gin.Engine) {
 		tracke.Route(api)
 		// 文章
 		article.Route(api)
-		api.GET("/topic/:topic", Topic.List)
 		api.POST("/subscribe", Subscribe.Create)
-		// 授权
-		//api.GET("/oauth/github", Oauth.Github)
-		//api.POST("/oauth/google", Oauth.Google)
 		// 账户
 		acct := api.Group("/account")
 		{
@@ -48,7 +44,6 @@ func NewRouter(router *gin.Engine) {
 		{
 			help.GET("/token", Help.Token)
 		}
-		api.GET("/ws/article/messages", Article.Messages)
 		api.GET("/seo/sitemap", Seo.SiteMap)
 		// 需要简单鉴权的API
 		tokenAuth := api.Group("/", middleware.TokenAuthCheck())

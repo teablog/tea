@@ -1,9 +1,10 @@
-package message
+package article
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
@@ -95,43 +96,17 @@ func (m *ServerMessage) Bytes() []byte {
 	return buf.Bytes()
 }
 
-func (m *ServerMessage) GetArticleID() string {
-	return m.ArticleId
-}
+var Msg *_message
 
-func (m *ServerMessage) GetAccountID() string {
-	return m.Sender.Id
-}
-
-type ServerMessageSlice []*ServerMessage
-
-func (rows ServerMessageSlice) store() bool {
-	if len(rows) == 0 {
-		return false
-	}
-	buf := bytes.NewBuffer(nil)
-	for _, v := range rows {
-		buf.WriteString(fmt.Sprintf(`{ "index" : { "_index" : "%s", "_id" : "%s" } }`, consts.IndicesMessagesConst, v.Id))
-		buf.WriteString("\n")
-		buf.Write(v.Bytes())
-	}
-	logger.Debugf("[bulk]: %s", buf.String())
-	res, err := db.ES.Bulk(buf)
-	if err != nil {
-		logger.Wrapf(err, "[ES] server messages bulk save err: %s", err.Error())
-		return false
-	}
-	defer res.Body.Close()
-	if res.IsError() {
-		resp, _ := ioutil.ReadAll(res.Body)
-		logger.Errorf("[ES] es response: %s", res.StatusCode, string(resp))
-		return false
-	}
-	return true
-}
+type _message struct{}
 
 // FindMessages 获取评论列表
-func FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, error) {
+func (*_message) FindMessages(ctx *gin.Context) {
+	var req validate.MessagesValidator
+	if err := ctx.ShouldBind(req); err != nil {
+		helper.ServerErr(ctx)
+		return
+	}
 	var (
 		before time.Time
 		after  time.Time
@@ -172,23 +147,27 @@ func FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, erro
 	)
 	if err != nil {
 		logger.Errorf("[ES] %s search error: %s", consts.IndicesMessagesConst, err.Error())
-		return 0, nil, errors.New("消息获取失败～")
+		helper.ServerErr(ctx)
+		return
 	}
 	defer resp.Body.Close()
 
 	res, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		logger.Errorf("[ES] response body read failed: %s", err.Error())
-		return 0, nil, errors.New("消息获取失败～")
+		helper.ServerErr(ctx)
+		return
 	}
 	if resp.IsError() {
 		logger.Errorf("[ES] response error: %s", string(res))
-		return 0, nil, errors.New("消息获取失败～")
+		helper.ServerErr(ctx)
+		return
 	}
 	var r db.ESListResponse
 	if err := json.Unmarshal(res, &r); err != nil {
 		logger.Errorf("[json] unmarshal err: %s\n%s", err.Error(), string(res))
-		return 0, nil, errors.New("消息获取失败～")
+		helper.ServerErr(ctx)
+		return
 	}
 	type hits []struct {
 		Source *ServerMessage `json:"_source"`
@@ -198,7 +177,8 @@ func FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, erro
 	data := make(hits, 0)
 	if err := json.Unmarshal(r.Hits.Hits, &data); err != nil {
 		logger.Errorf("[json] unmarshal err: %s\n%s", err.Error(), string(r.Hits.Hits))
-		return 0, nil, errors.New("消息获取失败～")
+		helper.ServerErr(ctx)
+		return
 	}
 
 	rows := make(serverMessageSlice, 0)
@@ -206,6 +186,10 @@ func FindMessages(req validate.MessagesValidator) (int, serverMessageSlice, erro
 		rows = append(rows, v.Source)
 	}
 	sort.Sort(rows)
+	helper.Success(ctx, gin.H{"total": r.Hits.Total.Value, "list": data})
+	return
+}
 
-	return r.Hits.Total.Value, rows, nil
+func (*_message) Comment(ctx *gin.Context)  {
+	
 }

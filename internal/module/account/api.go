@@ -22,7 +22,7 @@ func NameExists(ctx *gin.Context) {
 		helper.Fail(ctx, errors.New("服务器出错了～"))
 		return
 	}
-	helper.Success(ctx, c == 0)
+	helper.Success(ctx, c != 0)
 	return
 }
 
