@@ -31,7 +31,7 @@ func init() {
 		unregister: make(chan *Client),
 		uuid:       make(map[string]int),
 	}
-	hub.Run()
+	go hub.Run()
 }
 
 func (h *Hub) Run() {
@@ -39,7 +39,7 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			// 注册客户端
-			client.send <- client.hub.Count().Bytes()
+			client.send <- hub.Count().Bytes()
 			h.uuid[client.uuid]++
 		case client := <-h.unregister:
 			h.uuid[client.uuid]--

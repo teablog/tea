@@ -40,7 +40,6 @@ var upgrader = websocket.Upgrader{
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	hub       *Hub
 	conn      *websocket.Conn
 	send      chan []byte
 	uuid      string
@@ -54,7 +53,7 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
+		hub.unregister <- c
 		_ = c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -110,7 +109,6 @@ func (c *Client) writePump() {
 				return
 			}
 		case <-countTicker.C:
-			logger.Debugf("count: %d", c.hub.Count())
 			c.send <- hub.Count().Bytes()
 		case <-pingTicker.C:
 			logger.Debugf("ping: %s", c.uuid)
@@ -137,6 +135,7 @@ func ServeWs(ctx *gin.Context) {
 	if uid, ok := ctx.Get(consts.CookieUUIDV2); ok {
 		client.uuid = uid.(string)
 	}
+	logger.Debugf("new uuid: %s", client.uuid)
 	hub.register <- client
 	go client.writePump()
 	go client.readPump()
