@@ -135,7 +135,6 @@ func ServeWs(ctx *gin.Context) {
 	if uid, ok := ctx.Get(consts.CookieUUIDV2); ok {
 		client.uuid = uid.(string)
 	}
-	logger.Debugf("new uuid: %s", client.uuid)
 	hub.register <- client
 	go client.writePump()
 	go client.readPump()

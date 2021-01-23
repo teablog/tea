@@ -39,8 +39,8 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			// 注册客户端
-			client.send <- hub.Count().Bytes()
 			h.uuid[client.uuid]++
+			client.send <- hub.Count().Bytes()
 		case client := <-h.unregister:
 			h.uuid[client.uuid]--
 			if h.uuid[client.uuid] == 0 {
