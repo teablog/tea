@@ -127,10 +127,14 @@ func (m *_message) FindMessages(ctx *gin.Context) {
 		order = "asc"
 	}
 	page := int(math.Ceil(float64(c) / float64(size)))
+	if page <= 0 {
+		page = 1
+	}
 	if req.Page > 0 {
 		page = req.Page
 	}
-	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d ,"from": %d}`, strings.Join(must, ","), order, size, (page-1)*size)
+	from := (page-1) * size
+	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d ,"from": %d}`, strings.Join(must, ","), order, size, from)
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesMessagesConst),
