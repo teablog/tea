@@ -94,7 +94,7 @@ func (a *_article) List(ctx *gin.Context) {
 		v.Cover = a.ConvertWebp(ctx, v.Cover)
 		list = append(list, v)
 	}
-	helper.Success(ctx, gin.H{"total": c, "data": data})
+	helper.Success(ctx, gin.H{"total": c, "data": list})
 	return
 }
 
