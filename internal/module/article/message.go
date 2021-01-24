@@ -14,6 +14,7 @@ import (
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -103,45 +104,31 @@ var Msg *_message
 type _message struct{}
 
 // FindMessages 获取评论列表
-func (*_message) FindMessages(ctx *gin.Context) {
-	var req validate.MessagesValidator
+func (m *_message) FindMessages(ctx *gin.Context) {
+	req := new(validate.MessagesValidator)
 	if err := ctx.ShouldBind(req); err != nil {
 		helper.ServerErr(ctx)
 		return
 	}
-	var (
-		before time.Time
-		after  time.Time
-	)
 	must := []string{fmt.Sprintf(`{"term": {"article_id": "%s"}}`, req.ArticleId)}
-	if req.Before > 0 {
-		before = time.Unix(req.Before/1000, int64(req.Before%1000)*1000000)
-	}
-	if req.After > 0 {
-		after = time.Unix(req.After/1000, int64(req.After%1000)*1000000)
-	}
-	if !before.IsZero() {
-		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"lt": "%s"}}}`, before.Format(consts.EsTimeFormat))))
-	}
-	if !after.IsZero() {
-		must = append(must, fmt.Sprintf(fmt.Sprintf(`{"range": { "date": {"gt": "%s"}}}`, after.Format(consts.EsTimeFormat))))
+	c, err := m.count(req.ArticleId)
+	if err != nil {
+		logger.Wrapf(err, "message count err ")
+		helper.ServerErr(ctx)
+		return
 	}
 	var (
-		order       = "desc"
-		size  int64 = 20
-		from        = ``
+		order = "desc"
+		size  = 100
 	)
 	if req.Sort == "asc" {
 		order = "asc"
 	}
-	if req.Size > 0 {
-		size = req.Size
-	}
+	page := int(math.Ceil(float64(c) / float64(size)))
 	if req.Page > 0 {
-		from = fmt.Sprintf(`,"from": %d`, (req.Page-1)*size)
+		page = req.Page
 	}
-	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d %s}`, strings.Join(must, ","), order, size, from)
-
+	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d ,"from": %d}`, strings.Join(must, ","), order, size, (page-1)*size)
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesMessagesConst),
@@ -175,21 +162,42 @@ func (*_message) FindMessages(ctx *gin.Context) {
 		Source *ServerMessage `json:"_source"`
 		Id     string         `json:"_id"`
 	}
-
 	data := make(hits, 0)
 	if err := json.Unmarshal(r.Hits.Hits, &data); err != nil {
 		logger.Errorf("[json] unmarshal err: %s\n%s", err.Error(), string(r.Hits.Hits))
 		helper.ServerErr(ctx)
 		return
 	}
-
 	rows := make(serverMessageSlice, 0)
 	for _, v := range data {
 		rows = append(rows, v.Source)
 	}
 	sort.Sort(rows)
-	helper.Success(ctx, gin.H{"total": r.Hits.Total.Value, "list": data})
+	helper.Success(ctx, gin.H{"total": r.Hits.Total.Value, "list": rows, "page": page, "size": size})
 	return
+}
+
+func (*_message) count(articleId string) (int, error) {
+	res, err := db.ES.Count(
+		db.ES.Count.WithIndex(consts.IndicesMessagesConst),
+		db.ES.Count.WithBody(strings.NewReader(fmt.Sprintf(`{ "query": { "term": { "article_id": "%s" } } }`, articleId))),
+	)
+	if err != nil {
+		return 0, err
+	}
+	defer res.Body.Close()
+	if res.IsError() {
+		data, _ := ioutil.ReadAll(res.Body)
+		return 0, errors.Errorf("es response err: %s", string(data))
+	}
+	type r struct {
+		Count int `json:"count"`
+	}
+	rs := new(r)
+	if err := json.NewDecoder(res.Body).Decode(rs); err != nil {
+		return 0, err
+	}
+	return rs.Count, nil
 }
 
 func (*_message) Comment(ctx *gin.Context) {
@@ -211,6 +219,7 @@ func (*_message) Comment(ctx *gin.Context) {
 		helper.ServerErr(ctx)
 		return
 	}
+	defer res.Body.Close()
 	if res.IsError() {
 		data, _ := ioutil.ReadAll(res.Body)
 		logger.Errorf("comment es err: %s", string(data))

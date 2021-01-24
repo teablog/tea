@@ -5,7 +5,7 @@ type MessagesValidator struct {
 	Before    int64  `json:"before" form:"before"`
 	After     int64  `json:"after" form:"after"`
 	Sort      string `json:"sort" form:"sort"`
-	Size      int64  `json:"size" form:"size"`
-	Page      int64  `json:"page" form:"page"`
+	Size      int `json:"size" form:"size"`
+	Page      int  `json:"page" form:"page"`
 }
 
