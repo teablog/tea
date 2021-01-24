@@ -1,7 +1,7 @@
 package consts
 
 const (
-	IndicesMessagesConst  = "messages_test"
+	IndicesMessagesConst  = "messages"
 	IndicesMessageMapping = `
 {
   "settings": {
