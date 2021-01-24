@@ -24,13 +24,8 @@ func NewRouter(router *gin.Engine) {
 		tracke.Route(api)
 		// 文章
 		article.Route(api)
-		api.POST("/subscribe", Subscribe.Create)
 		// 账户
-		acct := api.Group("/account")
-		{
-			acct.GET("/name/exists", account.NameExists)
-			acct.POST("/register", account.Register)
-		}
+		account.Route(api)
 		// 工具
 		tool := api.Group("/tools")
 		{

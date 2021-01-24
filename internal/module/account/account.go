@@ -38,7 +38,7 @@ func NewAccount() *Account {
 
 func (a *Account) Create(ctx *gin.Context) (data *Account, err error) {
 	//id := helper.Md516([]byte(i.Id() + i.Source()))
-	id := helper.Md516([]byte(a.Name))
+	id := helper.Md516([]byte(a.Name + a.Email))
 	var buf bytes.Buffer
 	data = &Account{
 		Name:     a.Name,

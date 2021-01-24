@@ -1,6 +1,9 @@
 package article
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/teablog/tea/internal/middleware"
+)
 
 func Route(api *gin.RouterGroup) {
 	as := api.Group("/articles")
@@ -13,7 +16,7 @@ func Route(api *gin.RouterGroup) {
 	{
 		a.GET("", Art.Get)
 		a.GET("/messages", Msg.FindMessages)
-		a.POST("/message", Msg.Comment)
+		a.POST("/comment", middleware.LoginCheck(), Msg.Comment)
 	}
 	t := api.Group("/topic")
 	{

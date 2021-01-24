@@ -10,6 +10,7 @@ import (
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"github.com/teablog/tea/internal/logger"
+	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
@@ -68,7 +69,7 @@ func (m serverMessageSlice) Swap(i, j int) {
 	(m)[i], (m)[j] = (m)[j], (m)[i]
 }
 
-func NewMessage(acct *account.Account, cm ClientMessage) *ServerMessage {
+func NewMessage(acct *account.Account, cm *ClientMessage) *ServerMessage {
 	m := &ServerMessage{
 		Content:   cm.Content,
 		Sender:    acct,
@@ -85,7 +86,8 @@ func (m *ServerMessage) GenId() string {
 	buf.WriteString(m.Date.String())
 	buf.WriteString(m.Sender.Id)
 	buf.WriteString(m.Content)
-	return helper.Md532(buf.Bytes())
+	m.Id = helper.Md532(buf.Bytes())
+	return m.Id
 }
 
 func (m *ServerMessage) Bytes() []byte {
@@ -190,6 +192,30 @@ func (*_message) FindMessages(ctx *gin.Context) {
 	return
 }
 
-func (*_message) Comment(ctx *gin.Context)  {
-	
+func (*_message) Comment(ctx *gin.Context) {
+	a := middleware.GetAccount(ctx)
+	cm := new(ClientMessage)
+	if err := ctx.Bind(cm); err != nil {
+		logger.Wrapf(err, "comment ctx bind err")
+		helper.Fail(ctx, errors.New("参数缺失～"))
+		return
+	}
+	sm := NewMessage(a, cm)
+	res, err := db.ES.Index(
+		consts.IndicesMessagesConst,
+		bytes.NewReader(sm.Bytes()),
+		db.ES.Index.WithDocumentID(sm.Id),
+	)
+	if err != nil {
+		logger.Wrapf(err, "comment err")
+		helper.ServerErr(ctx)
+		return
+	}
+	if res.IsError() {
+		data, _ := ioutil.ReadAll(res.Body)
+		logger.Errorf("comment es err: %s", string(data))
+		return
+	}
+	helper.Success(ctx, sm)
+	return
 }

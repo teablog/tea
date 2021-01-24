@@ -1,7 +1,7 @@
 package consts
 
 const (
-	IndicesAccountConst = "account"
+	IndicesAccountConst = "account_test"
 	IndicesAccountMapping = `
 {
   "settings": {
