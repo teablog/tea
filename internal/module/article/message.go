@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/consts"
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
@@ -15,6 +16,7 @@ import (
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
 	"math"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -201,6 +203,10 @@ func (*_message) count(articleId string) (int, error) {
 }
 
 func (*_message) Comment(ctx *gin.Context) {
+	if !config.Global.CommentEnable() {
+		helper.FailWithCode(ctx, errors.New("评论功能正在维护中～"), http.StatusServiceUnavailable)
+		return
+	}
 	a := middleware.GetAccount(ctx)
 	cm := new(ClientMessage)
 	if err := ctx.Bind(cm); err != nil {

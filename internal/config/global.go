@@ -36,3 +36,9 @@ func (*_global) CookieMaxAge() int {
 	}
 	return t
 }
+
+// 是否开启评论
+func (*_global) CommentEnable() bool {
+	t, _ := Config.Section("global").Key("comment_enable").Int()
+	return t > 0
+}
