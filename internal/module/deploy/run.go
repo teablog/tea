@@ -114,12 +114,12 @@ func Run(dir string) {
 				// 新文章
 				if _, ok := idCache[a.ID]; !ok {
 					if err := a.Create(); err != nil {
-						chanErr <- errors.Wrapf(err, "elasticsearch save err: %s", err)
+						chanErr <- errors.Wrapf(err, "elasticsearch create err: %s", err)
 						return
 					}
 				} else {
 					if err := a.Update(); err != nil {
-						chanErr <- errors.Wrapf(err, "elasticsearch save err: %s", err)
+						chanErr <- errors.Wrapf(err, "elasticsearch update err: %s", err)
 						return
 					}
 				}
@@ -132,10 +132,10 @@ func Run(dir string) {
 	time.Sleep(10 * time.Millisecond)
 	logger.Infof("----------------- errors --------------------")
 	for _, v := range errs {
-		logger.Errorf("%s", v.Error())
+		logger.Errorf("%s\n", v.Error())
 	}
 	if len(errs) > 0 {
-		logger.Error("please solve the errors")
+		logger.Error("please solve the errors\n")
 		return
 	}
 	logger.Infof("----------------- delete article -----------")
