@@ -7,3 +7,13 @@ services:
       - 5601:5601
     volumes:
       - /data/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+  cerebro:
+    image: lmenezes/cerebro:latest
+    container_name: cerebro
+    ports:
+      - 9000:9000
+    command:
+      - "-Dhosts.0.host=http://elastichsearch.douyacun.com:9200"
+      - "-Dhosts.1.host=http://82.156.80.115:9200"
+    networks:
+      - elastic
