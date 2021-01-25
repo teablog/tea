@@ -14,4 +14,4 @@ services:
       - 9004:9000
     command:
       - "-Dhosts.0.host=http://elastichsearch.douyacun.com:9200"
-      - "-Dhosts.1.host=http://82.156.80.115:9200"
+      - "-Dhosts.1.host=http://116.196.69.34:9200"
