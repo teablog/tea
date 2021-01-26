@@ -27,3 +27,5 @@ const OutsideMapping = `
   }
 }
 `
+
+const OutsideReg = `<a(.*)?href=\"https\:\/\/www\.douyacun\.com\"(.*?)>Douyacun<\/a>`
