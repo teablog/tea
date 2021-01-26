@@ -5,6 +5,7 @@ import (
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/module/article"
+	"github.com/teablog/tea/internal/module/outside"
 	"github.com/teablog/tea/internal/module/tools"
 	"github.com/teablog/tea/internal/module/tracke"
 	"github.com/teablog/tea/internal/module/ws"
@@ -26,6 +27,8 @@ func NewRouter(router *gin.Engine) {
 		article.Route(api)
 		// 账户
 		account.Route(api)
+		// 外链
+		outside.Route(api)
 		// 工具
 		tool := api.Group("/tools")
 		{
