@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/module/mail"
 	"github.com/teablog/tea/internal/module/outside/html"
@@ -17,18 +18,19 @@ import (
 
 // Spider 爬虫验证友情链接是否已经添加
 func (row *Outside) Spider() {
+	id := row.GenId()
 	// 过滤黑名单
 	if blacks, err := All(); err != nil {
 		logger.Wrapf(err, "outside black es search err ")
 		return
 	} else {
 		for _, v := range blacks {
-			if strings.Contains(row.Url, v.Host) {
+			if strings.Contains(row.Url, v.Host) && v.Id != id {
 				return
 			}
 		}
 	}
-	skill := `<p><a href="https://www.douyacun.com">如何在Douyacun添加友情链接</a></p>`
+	skill := fmt.Sprintf(`<p><a href="%s/article/%s">如何在Douyacun添加友情链接</a></p>`, config.Global.Host(), config.ES.FriendsLinkId())
 	msg := mail.NewMessage()
 	msg.SetTo(row.Email)
 	msg.SetTitle("Douyacun 友情链接")
@@ -47,6 +49,7 @@ func (row *Outside) Spider() {
 		bd := "<p>友情链接添加失败了，您的网站访问似乎出了点问题</p>"
 		bd += fmt.Sprintf("<p>网站地址: %s</p>", row.Url)
 		bd += fmt.Sprintf("<p>%s</p>%s", err.Error(), skill)
+		msg.SetBody(html.Common(bd))
 		mail.Send(msg)
 		return
 	}
@@ -54,8 +57,8 @@ func (row *Outside) Spider() {
 	if err := matchHost(body, OutsideReg); err != nil {
 		if err == ErrorNoMatch {
 			bd := "<p>友情链接添加失败了，没有在您的网站中访问到Douyacun\n</p>"
-			bd += fmt.Sprintf("网站地址: %s\n", row.Url)
-			bd += "\n" + skill + "\n"
+			bd += fmt.Sprintf("<p>网站地址: %s</p>", row.Url)
+			bd += skill
 			msg.SetBody(html.Common(bd))
 			mail.Send(msg)
 			return
@@ -65,9 +68,9 @@ func (row *Outside) Spider() {
 	}
 	// 匹配 robots.txt
 	if matchRobots(fmt.Sprintf("%s://%s/robots.txt", up.Scheme, up.Host)) {
-		bd := "友情链接添加失败了，没有在您的网站中访问到Douyacun\n"
-		bd += fmt.Sprintf("网站地址: %s\n", row.Url)
-		bd += "\n" + skill + "\n"
+		bd := "<p>友情链接添加失败了，没有在您的网站中访问到Douyacun</p>"
+		bd += fmt.Sprintf("<p>网站地址: %s</p>", row.Url)
+		bd += skill
 		msg.SetBody(html.Common(bd))
 		mail.Send(msg)
 		return
@@ -76,10 +79,8 @@ func (row *Outside) Spider() {
 		logger.Wrapf(err, "outside create err ")
 		return
 	}
-	// todo 发送成功添加邮件，创建
-	bd := "友情链接添加成功\n"
-	bd += fmt.Sprintf("点此查看: %s\n", row.Url)
-	bd += "\n" + skill + "\n"
+	bd := "<p>友情链接添加成功</p>"
+	bd += fmt.Sprintf(`<p>点此查看: <a href="%s">%s</a></p>`, config.Global.Host(), config.Global.Host())
 	msg.SetBody(html.Common(bd))
 	mail.Send(msg)
 }

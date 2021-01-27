@@ -20,5 +20,5 @@ func TestSpider(t *testing.T) {
 	o.Email = "douyacun@163.com"
 	o.Title = "Douyacun"
 	o.Spider()
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 }

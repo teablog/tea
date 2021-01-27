@@ -11,5 +11,5 @@ func TestSend(t *testing.T) {
 	Init()
 	m := NewMessage().SetTo("douyacun@163.com").SetTitle("报警邮件").SetBody("出bug，快来修复")
 	Send(m)
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 }

@@ -2,6 +2,7 @@ package outside
 
 import (
 	"errors"
+	"github.com/teablog/tea/internal/helper"
 	"time"
 )
 
@@ -14,6 +15,33 @@ type Outside struct {
 	Host     string    `json:"host"`
 	Status   int       `json:"status"`
 	Email    string    `json:"email"`
+}
+
+func NewOutside() *Outside {
+	return &Outside{}
+}
+
+func (row *Outside) GenId() string {
+	if row.Url != "" {
+		row.Id = helper.Md532([]byte(row.Url))
+		return row.Id
+	}
+	return ""
+}
+
+func (row *Outside) SetUrl(url string) *Outside {
+	row.Url = url
+	return row
+}
+
+func (row *Outside) SetTitle(title string) *Outside {
+	row.Title = title
+	return row
+}
+
+func (row *Outside) SetEmail(email string) *Outside {
+	row.Email = email
+	return row
 }
 
 type OutsideSlice []*Outside

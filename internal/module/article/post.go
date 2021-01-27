@@ -77,11 +77,13 @@ func (a *_article) List(ctx *gin.Context) {
 	}
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		logger.Wrapf(err, "json encode error")
-		helper.Fail(ctx, errors.New("服务器出错了～"))
+		helper.ServerErr(ctx)
 		return
 	}
 	c, data, err := a.Search(buf.String())
 	if err != nil {
+		logger.Wrapf(err, "article list es search err ")
+		helper.ServerErr(ctx)
 		return
 	}
 	adSensePos := config.Ad.AdSenseFeedsPos()
@@ -155,6 +157,7 @@ func (a *_article) Get(ctx *gin.Context) {
 }
 
 func (*_article) Search(body string) (int, ASlice, error) {
+	logger.Debugf(body)
 	resp, err := db.ES.Search(
 		db.ES.Search.WithIndex(consts.IndicesArticleCost),
 		db.ES.Search.WithBody(strings.NewReader(body)),
@@ -163,6 +166,10 @@ func (*_article) Search(body string) (int, ASlice, error) {
 		return 0, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.IsError() {
+		data, _ := ioutil.ReadAll(resp.Body)
+		return 0, nil, errors.Errorf("es response %d  %s", resp.StatusCode, string(data))
+	}
 	var eslist db.ESListResponse
 	if err := json.NewDecoder(resp.Body).Decode(&eslist); err != nil {
 		return 0, nil, err

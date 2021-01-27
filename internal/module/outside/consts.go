@@ -1,6 +1,6 @@
 package outside
 
-const OutsideIndex = "outside_test"
+const OutsideIndex = "outside"
 
 const OutsideMapping = `
 {
@@ -29,6 +29,9 @@ const OutsideMapping = `
       "email": {
         "type": "keyword"
       },
+      "reason": {
+        "type": "text"
+      }
     }
   }
 }

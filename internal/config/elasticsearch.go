@@ -15,3 +15,7 @@ func (*_elasticsearch) User() string {
 func (*_elasticsearch) Password() string {
 	return Config.Section("elasticsearch").Key("password").String()
 }
+
+func (*_elasticsearch) FriendsLinkId() string {
+	return Config.Section("elasticsearch").Key("friends_link_id").String()
+}

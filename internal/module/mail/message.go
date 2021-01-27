@@ -57,7 +57,7 @@ func start() {
 			fmt.Println("timeout")
 			if open {
 				if err := s.Close(); err != nil {
-					panic(err)
+					logger.Wrapf(err, "smtp server close err ")
 				}
 				open = false
 			}

@@ -13,6 +13,7 @@ import (
 	"github.com/teablog/tea/internal/logger"
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
+	"github.com/teablog/tea/internal/module/outside"
 	"github.com/teablog/tea/internal/validate"
 	"io/ioutil"
 	"math"
@@ -133,7 +134,7 @@ func (m *_message) FindMessages(ctx *gin.Context) {
 	if req.Page > 0 {
 		page = req.Page
 	}
-	from := (page-1) * size
+	from := (page - 1) * size
 	query := fmt.Sprintf(`{"query": {"bool": {"must": [%s]}}, "sort": { "date": { "order": "%s" } }, "size": %d ,"from": %d}`, strings.Join(must, ","), order, size, from)
 	logger.Debugf("[ES query]: %s", query)
 	resp, err := db.ES.Search(
@@ -234,6 +235,10 @@ func (*_message) Comment(ctx *gin.Context) {
 		data, _ := ioutil.ReadAll(res.Body)
 		logger.Errorf("comment es err: %s", string(data))
 		return
+	}
+	// 添加友情连接
+	if sm.ArticleId == config.ES.FriendsLinkId() {
+		go outside.NewOutside().SetEmail(a.Email).SetTitle(a.Name).SetUrl(a.Url).Spider()
 	}
 	helper.Success(ctx, sm)
 	return

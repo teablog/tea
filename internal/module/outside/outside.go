@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/teablog/tea/internal/db"
-	"github.com/teablog/tea/internal/helper"
 	"io/ioutil"
 	"net/url"
 	"strings"
@@ -41,15 +40,17 @@ func search(body string) (int, OutsideSlice, error) {
 }
 
 func (row *Outside) create() error {
-	row.Id = helper.Md532([]byte(row.Url))
+	row.GenId()
 	row.CreateAt = time.Now()
+	row.Status = 1
+	row.Priority = 1
 	up, err := url.Parse(row.Url)
 	if err != nil {
 		return err
 	}
 	hosts := strings.Split(up.Host, ".")
 	if len(hosts) >= 2 {
-		row.Host = strings.Join(hosts[len(hosts)-2:], ",")
+		row.Host = strings.Join(hosts[len(hosts)-2:], ".")
 	} else {
 		row.Host = up.Host
 	}

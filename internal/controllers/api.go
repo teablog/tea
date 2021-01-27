@@ -5,6 +5,7 @@ import (
 	"github.com/teablog/tea/internal/middleware"
 	"github.com/teablog/tea/internal/module/account"
 	"github.com/teablog/tea/internal/module/article"
+	"github.com/teablog/tea/internal/module/mail"
 	"github.com/teablog/tea/internal/module/outside"
 	"github.com/teablog/tea/internal/module/tools"
 	"github.com/teablog/tea/internal/module/tracke"
@@ -19,6 +20,8 @@ func Init(engine *gin.Engine) {
 func NewRouter(router *gin.Engine) {
 	api := router.Group("/api")
 	{
+		// 邮件服务
+		mail.Init()
 		// websocket
 		ws.Route(api)
 		// 数据上报
