@@ -1,10 +1,10 @@
 package outside
 
-const OutsideIndex = "outside"
+const OutsideIndex = "outside_test"
 
 const OutsideMapping = `
 {
-  "mappings": {a
+  "mappings": {
     "properties": {
       "create_at": {
         "type": "date"
@@ -22,10 +22,17 @@ const OutsideMapping = `
       "url": {
         "type": "keyword",
         "index": false
-      }
+      },
+      "host": {
+        "type": "keyword"
+      },
+      "email": {
+        "type": "keyword"
+      },
     }
   }
 }
 `
 
-const OutsideReg = `<a(.*)?href=\"https\:\/\/www\.douyacun\.com\"(.*?)>Douyacun<\/a>`
+// 向后断言: ?!</a>
+const OutsideReg = `<a[^>]+?href=["'](https\:\/\/www\.douyacun\.com)["'][^>]*>(.*?)</a>`

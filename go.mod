@@ -25,7 +25,9 @@ require (
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
 	golang.org/x/sys v0.0.0-20191224085550-c709ea063b76 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/ini.v1 v1.52.0
 	gopkg.in/yaml.v2 v2.2.2
 )

@@ -7,7 +7,9 @@ import (
 	"github.com/teablog/tea/internal/db"
 	"github.com/teablog/tea/internal/helper"
 	"io/ioutil"
+	"net/url"
 	"strings"
+	"time"
 )
 
 func search(body string) (int, OutsideSlice, error) {
@@ -38,8 +40,19 @@ func search(body string) (int, OutsideSlice, error) {
 	return r.Hits.Total.Value, data, nil
 }
 
-func create(row *Outside) error {
+func (row *Outside) create() error {
 	row.Id = helper.Md532([]byte(row.Url))
+	row.CreateAt = time.Now()
+	up, err := url.Parse(row.Url)
+	if err != nil {
+		return err
+	}
+	hosts := strings.Split(up.Host, ".")
+	if len(hosts) >= 2 {
+		row.Host = strings.Join(hosts[len(hosts)-2:], ",")
+	} else {
+		row.Host = up.Host
+	}
 	data, err := json.Marshal(row)
 	if err != nil {
 		return errors.Wrapf(err, "json marshal ")
@@ -58,4 +71,13 @@ func create(row *Outside) error {
 		return errors.Errorf("es response err: %s", string(b))
 	}
 	return nil
+}
+
+func All() (OutsideSlice, error) {
+	query := `{"size":10000,"_source":"host"}`
+	_, list, err := search(query)
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
 }

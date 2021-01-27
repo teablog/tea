@@ -60,7 +60,7 @@ func post(ctx *gin.Context) {
 		helper.Fail(ctx, errors.New("url/title 不能为空～"))
 		return
 	}
-	if err := create(o); err != nil {
+	if err := o.create(); err != nil {
 		logger.Wrapf(err, "outside es create err ")
 		helper.ServerErr(ctx)
 		return
