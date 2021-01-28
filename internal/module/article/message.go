@@ -238,6 +238,7 @@ func (*_message) Comment(ctx *gin.Context) {
 	}
 	// 添加友情连接
 	if sm.ArticleId == config.ES.FriendsLinkId() {
+		logger.Debugf("新友情链接需要入驻")
 		go outside.NewOutside().SetEmail(a.Email).SetTitle(a.Name).SetUrl(a.Url).Spider()
 	}
 	helper.Success(ctx, sm)

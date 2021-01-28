@@ -41,10 +41,9 @@ func start() {
 			if !config.Email.Enable() {
 				return
 			}
-			logger.Infof("send email to %s\n", m.GetHeader("To"))
 			if !open {
 				if s, err = d.Dial(); err != nil {
-					panic(err)
+					logger.Errorf("gomail dial %s err", config.Email.Host())
 				}
 				open = true
 			}
@@ -55,9 +54,7 @@ func start() {
 		// the last 30 seconds.
 		case <-time.After(30 * time.Second):
 			if open {
-				if err := s.Close(); err != nil {
-					logger.Wrapf(err, "smtp server close err ")
-				}
+				_ = s.Close()
 				open = false
 			}
 		}
