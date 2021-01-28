@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"fmt"
 	"github.com/teablog/tea/internal/config"
 	"github.com/teablog/tea/internal/logger"
 	"gopkg.in/gomail.v2"
@@ -42,6 +41,7 @@ func start() {
 			if !config.Email.Enable() {
 				return
 			}
+			logger.Infof("send email to %s\n", m.GetHeader("To"))
 			if !open {
 				if s, err = d.Dial(); err != nil {
 					panic(err)
@@ -54,7 +54,6 @@ func start() {
 		// Close the connection to the SMTP server if no email was sent in
 		// the last 30 seconds.
 		case <-time.After(30 * time.Second):
-			fmt.Println("timeout")
 			if open {
 				if err := s.Close(); err != nil {
 					logger.Wrapf(err, "smtp server close err ")

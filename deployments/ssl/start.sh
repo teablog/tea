@@ -7,4 +7,4 @@ do
     echo "> kill -9 ${var}"
     kill -9 $var
 done
-nohup $CURDIR/ssl/watch.sh >> $CURDIR/ssl/watch.log 2>&1 &
+nohup $CURDIR/watch.sh >> $CURDIR/watch.log 2>&1 &
